@@ -80,7 +80,7 @@ I used to pour water into my palm on walks for my dog to drink from. If you know
 
 **Variant A**
 
-My dog was throwing up after almost every meal because she was eating way too fast. A lick mat completely changed that. Freeze some peanut butter into this ice cream design, stick it to the floor with the suction cups, and she's focused and slow for twenty minutes. No more mess after dinner. Link in bio.
+My dog was throwing up after almost every meal because she was eating way too fast. A lick mat completely changed that. Freeze some peanut butter into this ice cream design, stick it to the floor with the suction cups, and she's focused and slow for twenty minutes. No more mess after dinner. 
 
 ---
 
