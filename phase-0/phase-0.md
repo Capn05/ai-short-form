@@ -43,6 +43,10 @@ For each product, save:
 - Top 3 customer reviews (copy the text)
 - All product images (download them)
 
+
+
+
+
 ---
 
 ## Step 2 — Generate Scripts (1 hour)
