@@ -1,7 +1,7 @@
 # Phase 0 — Generated Scripts
 
 2 variants per product. Same prompt structure for all: Hook (problem) → Transformation → CTA.
-Products 4 and 5 have zero reviews — scripts are weaker as a result. Flagged below.
+Product 4 has zero reviews — scripts are weaker as a result. Flagged below.
 Use the same avatar for both variants of the same product — format is the variable being tested, not demographics.
 
 ---
@@ -220,20 +220,3 @@ Shot sequence — first-person eye-level throughout, handheld, natural outdoor l
 
 9:16 vertical. The edit is slow and deliberate — this is not fast-cut. Let each action breathe so the satisfying sounds land.
 
----
-
-## Product 5 — Ice-Cream Slow Feeder Lick Mat (Doot's Pet)
-
-**Avatar:** Woman, 24–30, playful and expressive. The ice cream design signals a younger buyer who treats their dog like a baby — match that energy.
-
-> ⚠️ No customer reviews available. Same caveat as Product 4 — scripts are description-only. The bloating angle in Variant B is pulled from product copy, not from real customer language.
-
-**Variant A**
-
-My dog was throwing up after almost every meal because she was eating way too fast. A lick mat completely changed that. Freeze some peanut butter into this ice cream design, stick it to the floor with the suction cups, and she's focused and slow for twenty minutes. No more mess after dinner. If your dog inhales their food, this actually works.
-
----
-
-**Variant B**
-
-Fast eating in larger dogs can actually cause dangerous bloating — my vet told me I needed to slow her down at meals. This lick mat freezes with peanut butter or wet food and sticks to any surface with dual suction cups. Turns a 30-second inhale into a proper slow meal. If your dog eats way too fast, you need to try this — they have pizza and donut designs too.

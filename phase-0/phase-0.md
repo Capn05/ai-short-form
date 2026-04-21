@@ -52,7 +52,7 @@ For each product, save:
 
 *Completed as planned. Scripts saved in `scripts.md`.*
 
-For each of the 5 products, generate a script using this Claude prompt. Paste it into claude.ai:
+For each of the 4 products, generate a script using this Claude prompt. Paste it into claude.ai:
 
 ```
 You are writing a 30-second UGC-style video ad script for a pet product.
@@ -137,7 +137,7 @@ Download each as an MP3. Label them `product1-script1.mp3`, etc.
 
 *Evaluated qualitatively rather than through formal user testing.*
 
-Original plan called for showing 15 videos to 20 people and asking "would you stop scrolling." This was replaced with direct qualitative evaluation of format viability based on production output.
+Original plan called for showing videos to 20 people and asking "would you stop scrolling." This was replaced with direct qualitative evaluation of format viability based on production output.
 
 **Key signal:** Any format requiring lip sync (talking head, green screen) produced output that read as AI. Formats that avoid lip sync entirely (b-roll, POV, follow-me, aesthetic) produced output that cleared the quality bar.
 
@@ -145,7 +145,7 @@ Original plan called for showing 15 videos to 20 people and asking "would you st
 
 ## Phase 0 Exit Criteria
 
-- [x] Videos produced across all 5 products
+- [x] Videos produced across all 4 products
 - [x] Multiple formats tested per product
 - [x] Winning format identified: b-roll + voiceover, no lip sync
 - [x] Failing formats identified: talking head, green screen
