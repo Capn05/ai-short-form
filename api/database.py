@@ -7,9 +7,10 @@ from api.config import settings
 
 os.makedirs("data", exist_ok=True)
 
+_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False} if _is_sqlite else {},
 )
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()

@@ -15,7 +15,7 @@ class Settings:
     FRONTEND_URL: str = os.environ["FRONTEND_URL"]
 
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/app.db").replace("postgres://", "postgresql://", 1)
 
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/auth"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
