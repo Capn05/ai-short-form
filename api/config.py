@@ -17,6 +17,11 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./data/app.db").replace("postgres://", "postgresql://", 1)
 
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    AWS_S3_BUCKET: str = os.getenv("AWS_S3_BUCKET", "")
+    AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
+
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/auth"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"

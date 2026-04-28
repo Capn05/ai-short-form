@@ -24,7 +24,22 @@ def startup():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    checks = {"status": "ok", "db": "ok", "s3": "ok"}
+    try:
+        from api.database import SessionLocal
+        with SessionLocal() as db:
+            db.execute(__import__("sqlalchemy").text("SELECT 1"))
+    except Exception as e:
+        checks["db"] = str(e)
+        checks["status"] = "degraded"
+    try:
+        from api.s3 import _client
+        from api.config import settings
+        _client().head_bucket(Bucket=settings.AWS_S3_BUCKET)
+    except Exception as e:
+        checks["s3"] = str(e)
+        checks["status"] = "degraded"
+    return checks
 
 
 app.include_router(auth_router)

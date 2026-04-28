@@ -39,17 +39,11 @@ export const api = {
     request<{ files: string[] }>(`/jobs/${id}/files`),
 
   downloadFile: async (jobId: string, filename: string) => {
-    const res = await fetch(`${API}/jobs/${jobId}/download/${filename}`, {
-      headers: { Authorization: `Bearer ${token()}` },
-    });
-    if (!res.ok) throw new Error("Download failed");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    const res = await request<{ url: string }>(`/jobs/${jobId}/download/${filename}`);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = res.url;
     a.download = filename;
     a.click();
-    URL.revokeObjectURL(url);
   },
 };
 

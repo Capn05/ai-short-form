@@ -80,6 +80,10 @@ def run_pipeline(self, job_id: str, product_url: str):
         from pipeline.composition.generator import compose
         compose(run_dir)
 
+        _set_progress(r, job_id, 6, "Uploading...", 95)
+        from api.s3 import upload_run_files
+        upload_run_files(run_dir, run_id)
+
         _update_job(job_id, status="done")
         _set_progress(r, job_id, 6, "Done!", 100)
 

@@ -5,7 +5,7 @@ from datetime import datetime
 
 import redis as redis_lib
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ from api.config import settings
 from api.database import get_db, Job
 from api.auth import current_user
 from api.database import User
+from api import s3
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 _redis = redis_lib.from_url(settings.REDIS_URL)
@@ -65,11 +66,10 @@ def list_files(job_id: str, db: Session = Depends(get_db), user: User = Depends(
     if not job or job.status != "done" or not job.run_id:
         raise HTTPException(status_code=404, detail="Job not ready")
 
-    final_dir = Path("output/runs") / job.run_id / "final"
-    if not final_dir.exists():
+    files = s3.list_run_files(job.run_id)
+    if not files:
         raise HTTPException(status_code=404, detail="Output files not found")
 
-    files = [f.name for f in sorted(final_dir.iterdir()) if f.suffix == ".mp4"]
     return {"files": files}
 
 
@@ -84,15 +84,11 @@ def download_file(
     if not job or job.status != "done" or not job.run_id:
         raise HTTPException(status_code=404, detail="Job not ready")
 
-    # Prevent path traversal
     if "/" in filename or ".." in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
 
-    path = Path("output/runs") / job.run_id / "final" / filename
-    if not path.exists() or path.suffix != ".mp4":
-        raise HTTPException(status_code=404, detail="File not found")
-
-    return FileResponse(path, media_type="video/mp4", filename=filename)
+    url = s3.presigned_url(job.run_id, filename)
+    return {"url": url}
 
 
 def _job_dict(job: Job) -> dict:
