@@ -240,10 +240,14 @@ Respond with ONLY a JSON object matching this exact schema:
     raise RuntimeError("Claude returned no text block.")
 
 
+def _clean_json(s: str) -> str:
+    return re.sub(r",\s*([}\]])", r"\1", s)
+
+
 def _parse_json_response(text: str) -> dict:
     match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
     if match:
-        return json.loads(match.group(1))
+        return json.loads(_clean_json(match.group(1)))
 
     start = text.find("{")
     if start != -1:
@@ -254,7 +258,7 @@ def _parse_json_response(text: str) -> dict:
             elif ch == "}":
                 depth -= 1
                 if depth == 0:
-                    return json.loads(text[start : i + 1])
+                    return json.loads(_clean_json(text[start : i + 1]))
 
     raise RuntimeError(f"Could not extract JSON from response:\n{text[:500]}")
 
