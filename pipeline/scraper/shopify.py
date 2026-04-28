@@ -1,5 +1,6 @@
-import re
+import base64
 import json
+import subprocess
 import uuid
 import requests
 from pathlib import Path
@@ -7,7 +8,9 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-from pipeline.scraper.reviews import scrape_reviews
+import anthropic
+
+from pipeline.scraper.reviews import scrape_page_content
 
 
 def scrape(url: str, output_base: Path, skip_reviews: bool = False) -> dict:
@@ -33,18 +36,28 @@ def scrape(url: str, output_base: Path, skip_reviews: bool = False) -> dict:
     name = product.get("title", "")
     price = _extract_price(product)
     description_html = product.get("body_html", "") or ""
-    description_text = _html_to_text(description_html)
-    bullet_points = _extract_bullet_points(description_html)
+    description_fallback = _html_to_text(description_html)
     image_urls = [img["src"] for img in product.get("images", []) if img.get("src")]
 
     print(f"[scraper] product: {name}")
     print(f"[scraper] downloading {len(image_urls)} images...")
     local_images = _download_images(image_urls, images_dir)
 
-    print(f"[scraper] scraping reviews...")
-    reviews = scrape_reviews(url) if not skip_reviews else []
-    if skip_reviews:
-        print(f"[scraper] reviews skipped (--skip-reviews)")
+    print(f"[scraper] loading rendered page...")
+    page_content = scrape_page_content(url, skip_reviews=skip_reviews)
+    description_text = page_content["description"] or description_fallback
+    reviews = page_content["reviews"]
+
+    local_video = _download_video(page_content.get("video_url"), run_dir)
+
+    if len(description_text) < 800:
+        print(f"[scraper] thin description ({len(description_text)} chars) — extracting features from images...")
+        image_features = _extract_image_features(name, description_text, local_images)
+        if image_features:
+            description_text = description_text + "\n\n" + image_features
+            print(f"  [scraper] appended image-extracted features to description")
+    else:
+        print(f"[scraper] description sufficient ({len(description_text)} chars) — skipping image extraction")
 
     result = {
         "run_id": run_id,
@@ -53,12 +66,12 @@ def scrape(url: str, output_base: Path, skip_reviews: bool = False) -> dict:
         "product_name": name,
         "price": price,
         "description": description_text,
-        "bullet_points": bullet_points,
         "reviews": reviews,
         "has_reviews": len(reviews) > 0,
         "review_count": len(reviews),
         "images": local_images,
         "image_count": len(local_images),
+        "video": local_video,
         "scraped_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -118,19 +131,91 @@ def _html_to_text(html: str) -> str:
     return soup.get_text(separator=" ", strip=True)
 
 
-def _extract_bullet_points(html: str) -> list[str]:
-    if not html:
-        return []
-    soup = BeautifulSoup(html, "html.parser")
+def _download_video(video_url: str | None, run_dir: Path, duration: int = 15) -> str | None:
+    if not video_url:
+        return None
+    try:
+        print(f"[scraper] downloading product video (first {duration}s)...")
+        raw_path = run_dir / "product_video_raw.mp4"
+        trimmed_path = run_dir / "product_video.mp4"
 
-    items = [li.get_text(strip=True) for li in soup.find_all("li") if len(li.get_text(strip=True)) > 5]
+        resp = requests.get(video_url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        raw_path.write_bytes(resp.content)
 
-    if not items:
-        text = soup.get_text(separator=" ", strip=True)
-        sentences = re.split(r"[.!?]+", text)
-        items = [s.strip() for s in sentences if len(s.strip()) > 20][:6]
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", str(raw_path), "-t", str(duration), "-c", "copy", str(trimmed_path)],
+            capture_output=True,
+        )
+        raw_path.unlink(missing_ok=True)
 
-    return items
+        if result.returncode != 0 or not trimmed_path.exists():
+            print(f"  [scraper] video trim failed, skipping")
+            return None
+
+        print(f"  [scraper] saved → {trimmed_path.name}")
+        return str(trimmed_path)
+    except Exception as e:
+        print(f"  [scraper] video download failed: {e}")
+        return None
+
+
+def _extract_image_features(product_name: str, description: str, image_paths: list[str]) -> str:
+    if not image_paths:
+        return ""
+    try:
+        content = [
+            {
+                "type": "text",
+                "text": (
+                    f"Product: {product_name}\n\n"
+                    f"Existing text description: {description[:400]}\n\n"
+                    "The images below are product photos. Some may be infographics or diagrams with text callouts "
+                    "explaining features, specs, or how the product works. Extract any useful product information "
+                    "visible in the images that is NOT already covered in the text description above — things like "
+                    "how the product is used, key features, materials, capacity, safety info, or physical mechanics. "
+                    "Return only the extracted information as plain sentences. If nothing new is visible beyond the "
+                    "text description, return an empty string."
+                ),
+            }
+        ]
+
+        SUPPORTED = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+        MEDIA_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}
+        loaded = 0
+        for path_str in image_paths[:8]:
+            path = Path(path_str)
+            ext = path.suffix.lower()
+            if ext not in SUPPORTED:
+                continue
+            try:
+                raw = path.read_bytes()
+                if raw[:3] == b"\xff\xd8\xff":
+                    media_type = "image/jpeg"
+                elif raw[:8] == b"\x89PNG\r\n\x1a\n":
+                    media_type = "image/png"
+                else:
+                    media_type = MEDIA_TYPES.get(ext, "image/jpeg")
+                data = base64.standard_b64encode(raw).decode("utf-8")
+                content.append({"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data}})
+                loaded += 1
+            except Exception:
+                continue
+
+        if not loaded:
+            return ""
+
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=400,
+            messages=[{"role": "user", "content": content}],
+        )
+        result = next((b.text.strip() for b in response.content if b.type == "text"), "")
+        return result
+    except Exception as e:
+        print(f"  [scraper] image feature extraction failed: {e}")
+        return ""
 
 
 def _download_images(image_urls: list[str], images_dir: Path) -> list[str]:

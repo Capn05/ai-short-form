@@ -1,0 +1,30 @@
+# API keys — never commit
+.env
+.env.local
+
+# Pipeline output — large binary files, scraped data
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Database
+data/
+*.db
+
+# Node
+web/node_modules/
+web/.next/
+
+# OS
+.DS_Store
+Thumbs.dbok 
+
+# Playwright
+playwright-report/
+test-results/

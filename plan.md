@@ -25,91 +25,80 @@
 ---
 
 ## Phase 1 — Pipeline Script
-**Duration:** 2–3 weeks
+**Status:** Complete (core pipeline working end-to-end)
 **Goal:** End-to-end automated pipeline as a Python CLI. One command in, MP4 out. No web app yet.
 
 ```
 python generate.py --url "https://yourstore.myshopify.com/products/xyz"
 ```
 
-The pipeline has six sequential stages. Each stage outputs a file that the next stage consumes. Every stage should be independently runnable for debugging.
+Flags:
+- `--run-id <id>` — skip Stage 1, resume from an existing run
+- `--stage <1-6>` — run a single stage in isolation (for debugging)
+- `--n-scripts <n>` — number of script variants to generate (default: 1)
+- `--skip-reviews` — skip Playwright review scraping
 
-**Pre-Phase 1 task:** Identify and validate the video generation API before writing any pipeline code. TopView.ai was used manually in Phase 0 but their API pricing is prohibitive. Evaluate cheaper alternatives with Seedance 2 access (Fal.ai, Replicate, Segmind, or direct Seedance API). Confirm: Does the API accept reference images? What are per-generation costs and rate limits? This is the highest-priority unknown.
+**Video generation API:** Seedance 2 via Replicate. Accepts reference images per generation call. Cost is per-second of generated video.
 
 ---
 
 ### Stage 1 — Shopify Scraper
 
 - Playwright-based scraper (JS-rendered pages require headless browser)
-- Extract: all product images (high-res), description, bullet points, customer reviews, price, product name
-- Reviews are the highest-signal input for script authenticity — if a product has no reviews, flag it in the output JSON
-- Output: structured JSON with all product assets + image files saved to disk
+- Extracts: all product images (high-res), description, bullet points, customer reviews, price, product name
+- Also downloads first 15s of product demo video if present — used in Stage 3 for mechanics extraction
+- Reviews are the highest-signal input for script authenticity — if a product has no reviews, flagged in output and warned to user
+- Output: structured JSON with all product assets + image files saved to disk under `output/runs/<run_id>/`
 
 ---
 
 ### Stage 2 — Script Generation
 
-- Feed scraped JSON to Claude API
-- System prompt forces the model to use language pulled directly from real reviews — prevents generic output
-- Format: problem → transformation → CTA (~75 words, 30 seconds spoken)
-- CTA should be natural, not "link in bio" — e.g. "if your dog eats too fast, you need to try this"
-- Generate 2 script variants per product; keep both, let Stage 3 run on both in parallel
-- Output: 2 script text files
-
-**Note on products without reviews:** Phase 0 confirmed that scripts for review-poor products are noticeably weaker. Surface a warning in the output and prompt the user to provide 2–3 customer testimonials manually if reviews are unavailable.
+- Claude Opus 4 with adaptive thinking
+- 10 script types defined in `pipeline/knowledge/script_types.json`: Pattern Interrupt, Curiosity Gap, Social Proof, PAS, Before/After, Educational, Personal Story, Comparison, Urgency/Scarcity, Aspirational Identity
+- Script type is selected randomly per run; `--n-scripts 2` selects two distinct types
+- Format: 55–70 spoken words, ElevenLabs v3 emotion/delivery tags embedded inline (e.g. `[matter-of-fact]`, `[warm]`, `[thoughtful pause]`)
+- CTA is type-specific — each script type has its own CTA guidance in `script_types.json`, no hardcoded formula
+- Output: JSON per script variant + plain text file, summary `scripts.json`
 
 ---
 
 ### Stage 3 — Video Prompt Generation
 
-Phase 0 proved that Seedance 2 requires detailed, structured prompts to produce good output. Shot lists, camera style per shot, lighting, setting, and audio direction all materially affect quality. This stage is where the "agent" logic that TopView.ai handled manually gets built and automated.
+Three Claude calls per run:
 
-**What this stage builds:**
+**Call 1 — Reference image selection:** Claude Haiku reviews up to 8 product images and picks the single clearest product shot (plain background preferred). This image is used as the Seedance reference in Stage 5.
 
-Claude receives the script, product type, and product images, and outputs a complete Seedance-ready video prompt that includes:
-- Total shot count (typically 4–7 shots to cover the audio duration)
-- Per-shot description: camera angle, subject, action, composition, lighting
-- Stitching cues: each shot is written so the cut to the next shot is seamless (matching setting, lighting, and presence)
-- Audio direction: voiceover tone and pacing notes
-- Any text overlay cues with approximate timing (e.g. "text appears at 0:04: 'there has to be a better way'")
+**Call 2 — Product mechanics extraction (if video present):** Claude Haiku extracts frames from the product demo video and describes in 2–3 sentences exactly how the product is physically used — step by step hand actions, what opens/closes/pours. Used to prevent Seedance from generating physically impossible sequences.
 
-**Character consistency:** The winning format (POV/b-roll, no recurring face) sidesteps the hardest consistency problem. Because the "character" is hands and perspective rather than a face, shots only need to match on setting and lighting — which is enforced through the prompt. No reference frame tracking required.
+**Call 3 — Chunk prompt generation:** Claude Opus 4 with adaptive thinking generates 3 Seedance chunk prompts covering the full video. Each chunk is one Seedance API call (max 9.5s). Chunks support multiple cuts within a single generation using `| CUT |` as separator. Every shot specifies: subject, action, camera angle, movement, lighting, setting.
 
-**Source-of-truth knowledge files:** Claude's system prompt for this stage includes a set of curated MD files that encode what makes videos work. These live in `pipeline/knowledge/` and are loaded into the system prompt at generation time. Starting set:
+The system prompt encodes all Phase 0 learnings: POV/b-roll only, no presenter to camera, handheld shake movement, lived-in environments, lighting must be imperfect, hard cuts only, TikTok safe zone awareness, physical sequences must be fully described step by step.
 
-- `hooks.md` — principles for stop-scroll first 3 seconds, hook structures that work by product type, what to avoid
-- `shot-guidelines.md` — format-specific shot composition rules for each supported format (POV, follow-me, first-person, aesthetic b-roll), lighting principles, pacing
-- `voiceover-tone.md` — delivery tone guidelines by product category, friend voice note principles, CTA language that converts without sounding like an ad
+**Default format:** POV/b-roll + voiceover. No talking head. No green screen. No lip sync.
 
-These files are the codified learnings from Phase 0 and should be updated after every batch of new video generation. They are the mechanism for quality improvement over time without rewriting pipeline code.
-
-**Default format:** POV/b-roll + voiceover. Hardcoded in Phase 1. No talking head. No green screen. No lip sync under any circumstances.
-
-- Output: 2 video prompt text files (one per script variant)
+- Output: JSON per script variant + summary `video_prompts.json`
 
 ---
 
 ### Stage 4 — Voiceover Generation
 
-- ElevenLabs API: generate voiceover from script text
-- Voice selection: warm, conversational woman in her 30s — hardcode 1–2 validated voices at launch
-- Settings: Conversational style, Stability 0.5, Similarity boost 0.75
-- Generate audio first — video length in Stage 5 is determined by audio duration
-- Output: MP3 file per script variant + duration in seconds
+- ElevenLabs v3 model (`eleven_v3`) — supports inline emotion and delivery tags from Stage 2 scripts
+- Voice persona fetched from ElevenLabs API (gender, age, accent) and passed to Stage 2 and Stage 3 so scripts and shot descriptions match the voice
+- Audio duration drives video chunk length in Stage 5
+- Output: MP3 per script variant + `audio.json` with duration
 
 ---
 
 ### Stage 5 — Video Generation
 
-- Seedance 2 via cheaper API (to be validated pre-Phase 1 — see note above)
-- Input: per-shot prompts from Stage 3 + product reference images from Stage 1 + audio duration from Stage 4
-- Generate each shot as a separate API call — 4–7 calls per video
-- Each shot is generated without audio
-- Stitch shots in order using FFmpeg immediately after generation — do not wait for all shots before stitching
-- Total video duration should match or slightly exceed audio duration
-- Output: single stitched silent MP4 per script variant
-
-**Why per-shot generation instead of one prompt:** Shorter generations per call produce higher quality output from Seedance 2. TopView.ai's agent used this approach in Phase 0 — multiple clips per prompt, then stitch. Building it explicitly gives full control over shot length, order, and stitching logic.
+- Seedance 2 via Replicate (`bytedance/seedance-2.0`), 480p, 9:16, no audio
+- Reference image pre-processing: gpt-image-2 edits the Claude-selected reference image to remove small text and fine print from product labels before sending to Seedance. Image is resized to ≤1024px before upload to stay within API limits.
+- 3 chunks per video, durations distributed from actual audio length and rounded up to nearest valid Seedance value (4, 5, 6, 8, 10, 12, 15s)
+- Reference video chaining: each chunk's output is passed as `reference_videos` input to the next chunk, improving visual consistency across cuts
+- Retry logic: up to 2 retries per chunk with 15s/30s backoff on failure
+- Clips stitched with FFmpeg `-c copy` immediately after all chunks complete
+- Output: individual chunk MP4s + stitched silent MP4 per variant + `video.json`
 
 ---
 
@@ -118,17 +107,17 @@ These files are the codified learnings from Phase 0 and should be updated after 
 FFmpeg handles everything — no SaaS video editor.
 
 **Steps:**
-1. Combine stitched silent video (Stage 5) + voiceover MP3 (Stage 4) — sync audio to video start
-2. Trim or pad video to exactly match audio length
-3. Transcribe ElevenLabs MP3 via Whisper — output word-level timestamps
-4. Burn captions: bold white text, centered, large, TikTok native style, timed to Whisper output
-5. Apply text overlay blocks from Stage 3 prompt — parse overlay cues, render at specified timing
-6. Add royalty-free background music at low volume under voiceover (Pixabay or Free Music Archive)
-7. Export: 9:16 MP4 (TikTok/Reels, 15–30s) and 1:1 MP4 (Meta feed)
+1. Transcribe MP3 via OpenAI Whisper (`whisper-1`) — word-level timestamps
+2. Claude Haiku identifies ~15% of words with highest emotional impact — these render at larger font size (pop effect)
+3. Burn word-by-word captions: uppercase, bold white, black outline, 1 word at a time, ASS format, timed to Whisper output
+4. FFmpeg: combine silent video + voiceover, trim to exact audio duration, burn captions, encode H.264/AAC
+5. Output: 9:16 MP4 per script variant
 
-**Output:** 2 formats × 2 script variants = 4 MP4 files per product URL run
+**Not yet implemented:** background music, 1:1 Meta feed export, text overlays from Stage 3 prompts.
 
-**Gate to Phase 2:** Pipeline produces 4 complete MP4 files from a URL input without manual intervention. End-to-end generation time under 5 minutes.
+**Output:** 1 MP4 per script variant (default run = 1 final video)
+
+**Gate to Phase 2:** Pipeline produces a complete MP4 from a URL input without manual intervention. End-to-end generation time under 10 minutes.
 
 ---
 
@@ -148,10 +137,13 @@ FFmpeg handles everything — no SaaS video editor.
 | Video API reliability | Rate limits, failure rates, retry behavior |
 | Knowledge file gaps | Are there failure patterns the MD files don't account for? Update them. |
 
+**Known limitation — mechanically novel products:** Products with a design patent or non-obvious physical mechanism (e.g. a one-hand poop scooper) produce poor video quality when no product demo video is present. Seedance generates motion from learned priors — if the product's mechanic is novel, it invents the wrong motion or produces something generic. No prompt tuning fixes this; a real demo video is required as input. Phase 2 should quantify how common this failure mode is and inform whether to add an upfront warning or hard gate for products without a video.
+
 Run on at least:
 - 20 products with strong reviews (3+ reviews, specific language)
 - 20 products with weak or no reviews
 - 10 products with unusual image sets (few images, low resolution, no lifestyle shots)
+- 10 mechanically novel products (design patents, multi-step mechanisms) — split between those with and without a product demo video
 
 **Gate to Phase 3:** Pipeline produces acceptable output on >80% of URLs without manual intervention. Generation time under 5 minutes. Failure modes logged and categorized.
 
@@ -159,39 +151,45 @@ Run on at least:
 
 ## Phase 3 — Minimal Web Interface
 **Duration:** 1–2 weeks
-**Goal:** Wrap the pipeline in a single-page web app. Email delivery. Format selection. No dashboard.
+**Goal:** Wrap the pipeline in a single-page web app. Status-polling download page. Auth. No payments yet.
 
-**Stack:** Next.js, async job queue (BullMQ), email delivery (Resend)
+**Stack:**
+- **Next.js** — frontend (single form, status polling, download UI). Decoupled from backend — can evolve independently.
+- **FastAPI** — REST API. Receives submissions, enqueues Celery tasks, serves job status and file downloads.
+- **Celery** — Python worker. Imports and runs the pipeline directly (no subprocess). Updates job state in Redis on completion/failure.
+- **Redis** — job queue (Celery broker) + job state storage (Celery result backend). No separate database needed for Phase 3.
+- **Auth** — JWT or session-based via FastAPI. No payments.
+- **Hosting** — Railway. Single repo, three processes (FastAPI, Celery worker, Redis) configured via `railway.toml`. Billed on resource usage — cheap at low volume when the Celery worker is mostly idle.
 
 **The user flow:**
-1. Single form:
+1. User logs in
+2. Single form:
    - Product URL (required)
    - Optional: 3–5 benefit bullets
    - Optional: one sentence on target audience
-   - Video style: choose a format or leave on auto
-2. Submit → job queued → "We'll email you when your videos are ready"
-3. Generation runs async (3–5 min)
-4. Email with secure download link → 4 MP4 files
+3. Submit → job queued → status page shows "generating..." with live progress
+4. Status page flips to download button when complete — user downloads MP4 directly, no email
 
-**Format selection UI:** Show 3–4 tiles with a short visual preview clip and a one-line description for each format. Not a dropdown — founders need to see what a format looks like before they can pick it. Include an "Auto" option (defaults to POV/b-roll) for founders who don't want to decide.
-
-Supported formats at Phase 3 launch:
-- **Auto** (POV/b-roll + voiceover) — works for everything
-- **POV / b-roll** — product shown close-up from the user's perspective, voiceover
-- **Follow-me** — creator filmed from behind or side profile, walking with the product, voiceover
-- **Aesthetic b-roll** — slow, cinematic single shot + text overlay, trending audio
+**Job state tracked in Redis per job:**
+- Job ID
+- Status (queued / running / done / failed)
+- Run directory path
+- User ID
+- Timestamp
 
 **What is not being built:**
 - Dashboard or video history
 - Script editing interface
 - Voice or avatar selection
+- Format selection UI (POV/b-roll only for Phase 3)
 - Brand kit, logo overlay, color matching
 - Analytics or performance tracking
 - Direct platform publishing
 - Team or agency accounts
-- Auth (magic link or no-auth download URLs for MVP)
+- Email delivery
+- Payments
 
-**Gate to Phase 3 complete:** A founder can go from URL to downloaded MP4 without talking to anyone.
+**Gate to Phase 3 complete:** A logged-in user can go from URL to downloaded MP4 without any manual intervention.
 
 ---
 
