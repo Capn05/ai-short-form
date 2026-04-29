@@ -12,7 +12,7 @@ from openai import OpenAI
 MODEL = "bytedance/seedance-2.0"
 RESOLUTION = "480p"
 ASPECT_RATIO = "9:16"
-MAX_RETRIES = 2
+MAX_RETRIES = 4
 
 # Seedance only accepts these discrete duration values (seconds)
 VALID_DURATIONS = [4, 5, 6, 8, 10, 12, 15]
@@ -159,7 +159,8 @@ def _generate_chunk(
 
         except Exception as e:
             if attempt < MAX_RETRIES:
-                wait = 15 * (attempt + 1)
+                is_pa = "code: PA" in str(e) or "interrupted" in str(e).lower()
+                wait = 60 if is_pa else 15 * (attempt + 1)
                 print(f"    attempt {attempt + 1} failed ({e}). retrying in {wait}s...")
                 time.sleep(wait)
             else:

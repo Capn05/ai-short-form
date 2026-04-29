@@ -2,7 +2,7 @@ import json
 import random
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 
 
 KNOWLEDGE_DIR = Path(__file__).parent.parent / "knowledge"
@@ -54,7 +54,7 @@ Example (do NOT copy — for tone only):
 
 The product details and script type instructions will be in the user message."""
 
-    return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
+    return text
 
 
 def generate_scripts(product: dict, output_dir: Path, n: int = 2, voice_persona: str | None = None) -> list[dict]:
@@ -64,22 +64,22 @@ def generate_scripts(product: dict, output_dir: Path, n: int = 2, voice_persona:
     scripts_dir = output_dir / "scripts"
     scripts_dir.mkdir(exist_ok=True)
 
-    client = anthropic.Anthropic()
+    client = OpenAI()
     results = []
 
     for i, script_type in enumerate(chosen):
         print(f"[scripts] generating '{script_type['name']}' ({i+1}/{len(chosen)})...")
-        script_text, usage = _call_claude(client, product, script_type, voice_persona)
+        script_text, usage = _call_llm(client, product, script_type, voice_persona)
 
         result = {
             "script_type_id": script_type["id"],
             "script_type_name": script_type["name"],
             "script": script_text,
             "usage": {
-                "input_tokens": usage.input_tokens,
-                "output_tokens": usage.output_tokens,
-                "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0),
-                "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0),
+                "input_tokens": usage.prompt_tokens,
+                "output_tokens": usage.completion_tokens,
+                "cache_read_input_tokens": 0,
+                "cache_creation_input_tokens": 0,
             },
         }
 
@@ -102,24 +102,19 @@ def generate_scripts(product: dict, output_dir: Path, n: int = 2, voice_persona:
     return results
 
 
-def _call_claude(client: anthropic.Anthropic, product: dict, script_type: dict, voice_persona: str | None = None) -> tuple[str, object]:
+def _call_llm(client: OpenAI, product: dict, script_type: dict, voice_persona: str | None = None) -> tuple[str, object]:
     user_message = _build_user_message(product, script_type, voice_persona)
 
-    response = client.messages.create(
-        model="claude-opus-4-7",
-        max_tokens=2000,
-        thinking={"type": "adaptive"},
-        system=_build_system_prompt(),
-        messages=[{"role": "user", "content": user_message}],
+    response = client.chat.completions.create(
+        model="gpt-5.5",
+        max_completion_tokens=2000,
+        messages=[
+            {"role": "system", "content": _build_system_prompt()},
+            {"role": "user", "content": user_message},
+        ],
     )
 
-    text = ""
-    for block in response.content:
-        if block.type == "text":
-            text = block.text.strip()
-            break
-
-    return text, response.usage
+    return response.choices[0].message.content.strip(), response.usage
 
 
 def _build_user_message(product: dict, script_type: dict, voice_persona: str | None = None) -> str:

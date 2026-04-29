@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 
 SUPPORTED_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 MEDIA_TYPE_MAP = {
@@ -48,7 +48,7 @@ def generate_video_prompts(product: dict, run_dir: Path, voice_persona: str | No
     prompts_dir = run_dir / "video_prompts"
     prompts_dir.mkdir(exist_ok=True)
 
-    client = anthropic.Anthropic()
+    client = OpenAI()
 
     # Call 1: pick reference image from all product images
     all_image_blocks = _load_images(product.get("images", []), limit=8)
@@ -100,7 +100,7 @@ def generate_video_prompts(product: dict, run_dir: Path, voice_persona: str | No
 
 
 def _select_reference_image(
-    client: anthropic.Anthropic,
+    client: OpenAI,
     image_blocks: list[dict],
     image_paths: list[str],
 ) -> tuple[dict | None, str | None]:
@@ -124,14 +124,14 @@ def _select_reference_image(
     ]
     content.extend(image_blocks)
 
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=32,
+    response = client.chat.completions.create(
+        model="gpt-5.4",
+        max_completion_tokens=32,
         messages=[{"role": "user", "content": content}],
     )
 
     try:
-        text = next(b.text for b in response.content if b.type == "text")
+        text = response.choices[0].message.content
         idx = json.loads(text)["index"]
         idx = max(0, min(idx, len(image_blocks) - 1))
         print(f"  [video_prompts] selected image index {idx}")
@@ -141,7 +141,7 @@ def _select_reference_image(
         return image_blocks[0], image_paths[0]
 
 
-def _describe_mechanics(client: anthropic.Anthropic, video_frames: list[dict], product: dict | None = None) -> str | None:
+def _describe_mechanics(client: OpenAI, video_frames: list[dict], product: dict | None = None) -> str | None:
     if not video_frames:
         return None
 
@@ -163,14 +163,14 @@ def _describe_mechanics(client: anthropic.Anthropic, video_frames: list[dict], p
     ]
     content.extend(video_frames)
 
-    response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=150,
+    response = client.chat.completions.create(
+        model="gpt-5.4",
+        max_completion_tokens=150,
         messages=[{"role": "user", "content": content}],
     )
 
     try:
-        mechanics = next(b.text for b in response.content if b.type == "text").strip()
+        mechanics = response.choices[0].message.content.strip()
         print(f"  [video_prompts] mechanics: {mechanics[:100]}...")
         return mechanics
     except Exception as e:
@@ -179,8 +179,8 @@ def _describe_mechanics(client: anthropic.Anthropic, video_frames: list[dict], p
 
 
 def _generate_prompts(
-    client: anthropic.Anthropic,
-    system_prompt: list[dict],
+    client: OpenAI,
+    system_prompt: str,
     product: dict,
     script: dict,
     ref_image_block: dict | None,
@@ -225,19 +225,16 @@ Respond with ONLY a JSON object matching this exact schema:
     if ref_image_block:
         content.append(ref_image_block)
 
-    response = client.messages.create(
-        model="claude-opus-4-7",
-        max_tokens=4000,
-        thinking={"type": "adaptive"},
-        system=system_prompt,
-        messages=[{"role": "user", "content": content}],
+    response = client.chat.completions.create(
+        model="gpt-5.5",
+        max_completion_tokens=4000,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": content},
+        ],
     )
 
-    for block in response.content:
-        if block.type == "text":
-            return _parse_json_response(block.text)
-
-    raise RuntimeError("Claude returned no text block.")
+    return _parse_json_response(response.choices[0].message.content)
 
 
 def _clean_json(s: str) -> str:
@@ -319,13 +316,7 @@ VOICEOVER NOTES FIELD:
 - Energy by category: calming/anxiety 3/10, slow feeders 5/10, deshedding 6/10, health supplements 4/10.
 - CTA delivered at same pace as the rest — no sales inflection."""
 
-    return [
-        {
-            "type": "text",
-            "text": system_text,
-            "cache_control": {"type": "ephemeral"},
-        }
-    ]
+    return system_text
 
 
 def _estimate_duration(script_text: str) -> float:
@@ -374,8 +365,8 @@ def _load_images(image_paths: list[str], limit: int = 8, max_size: int = 512) ->
             data = base64.standard_b64encode(raw).decode("utf-8")
             blocks.append(
                 {
-                    "type": "image",
-                    "source": {"type": "base64", "media_type": "image/jpeg", "data": data},
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{data}"},
                 }
             )
         except Exception as e:
@@ -402,7 +393,7 @@ def _load_product_video(video_path: str | None, fps: str = "1/3") -> list[dict]:
             for frame in frames:
                 raw = frame.read_bytes()
                 data = base64.standard_b64encode(raw).decode("utf-8")
-                blocks.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}})
+                blocks.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{data}"}})
         print(f"  [video_prompts] extracted {len(blocks)} frames from product video")
         return blocks
     except Exception as e:

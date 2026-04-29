@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
-import anthropic
+from openai import OpenAI
 
 from pipeline.scraper.reviews import scrape_page_content
 
@@ -197,7 +197,7 @@ def _extract_image_features(product_name: str, description: str, image_paths: li
                 else:
                     media_type = MEDIA_TYPES.get(ext, "image/jpeg")
                 data = base64.standard_b64encode(raw).decode("utf-8")
-                content.append({"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data}})
+                content.append({"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{data}"}})
                 loaded += 1
             except Exception:
                 continue
@@ -205,13 +205,13 @@ def _extract_image_features(product_name: str, description: str, image_paths: li
         if not loaded:
             return ""
 
-        client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=400,
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-5.4",
+            max_completion_tokens=400,
             messages=[{"role": "user", "content": content}],
         )
-        result = next((b.text.strip() for b in response.content if b.type == "text"), "")
+        result = response.choices[0].message.content.strip()
         return result
     except Exception as e:
         print(f"  [scraper] image feature extraction failed: {e}")

@@ -2,7 +2,6 @@ import json
 import subprocess
 from pathlib import Path
 
-import anthropic
 from openai import OpenAI
 
 # Caption settings — tuned for 480p 9:16 (496×864)
@@ -126,11 +125,11 @@ def _mark_pop_words(words: list[dict]) -> None:
     if not words:
         return
     try:
-        ac = anthropic.Anthropic()
+        ac = OpenAI()
         transcript = " ".join(f"{i}:{w['word']}" for i, w in enumerate(words))
-        response = ac.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=200,
+        response = ac.chat.completions.create(
+            model="gpt-5.4",
+            max_completion_tokens=200,
             messages=[{
                 "role": "user",
                 "content": (
@@ -140,7 +139,7 @@ def _mark_pop_words(words: list[dict]) -> None:
                 ),
             }],
         )
-        raw = next((b.text.strip() for b in response.content if b.type == "text"), "")
+        raw = response.choices[0].message.content.strip() if response.choices[0].message.content else ""
         pop_indices = {int(x.strip()) for x in raw.split(",") if x.strip().isdigit()}
         for idx in pop_indices:
             if idx < len(words):
