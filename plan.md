@@ -1,8 +1,9 @@
 # AI UGC Platform — Build Plan
 
 **Product:** Fully automated pipeline: Shopify product URL → ready-to-run UGC-style video ads
-**Beachhead:** Pet product founders on Shopify doing <$10k/month revenue
-**Target price:** $99–199/month SaaS, no human in the loop
+**Beachhead:** Founders who've hit the UGC wall — cost, creator flakiness, or complexity
+**Pricing:** $6/generation pay-as-you-go → ~$49/month subscription for volume users (10+ videos/month)
+**Unit economics:** ~$2.50–3 COGS per generation, ~50–58% gross margin
 
 ---
 
@@ -54,7 +55,7 @@ Flags:
 
 ### Stage 2 — Script Generation
 
-- Claude Opus 4 with adaptive thinking
+- GPT-5.5
 - 10 script types defined in `pipeline/knowledge/script_types.json`: Pattern Interrupt, Curiosity Gap, Social Proof, PAS, Before/After, Educational, Personal Story, Comparison, Urgency/Scarcity, Aspirational Identity
 - Script type is selected randomly per run; `--n-scripts 2` selects two distinct types
 - Format: 55–70 spoken words, ElevenLabs v3 emotion/delivery tags embedded inline (e.g. `[matter-of-fact]`, `[warm]`, `[thoughtful pause]`)
@@ -67,11 +68,11 @@ Flags:
 
 Three Claude calls per run:
 
-**Call 1 — Reference image selection:** Claude Haiku reviews up to 8 product images and picks the single clearest product shot (plain background preferred). This image is used as the Seedance reference in Stage 5.
+**Call 1 — Reference image selection:** GPT-5.4 reviews up to 8 product images and picks the single clearest product shot (plain background preferred). This image is used as the Seedance reference in Stage 5.
 
-**Call 2 — Product mechanics extraction (if video present):** Claude Haiku extracts frames from the product demo video and describes in 2–3 sentences exactly how the product is physically used — step by step hand actions, what opens/closes/pours. Used to prevent Seedance from generating physically impossible sequences.
+**Call 2 — Product mechanics extraction (if video present):** GPT-5.4 extracts frames from the product demo video and describes in 2–3 sentences exactly how the product is physically used — step by step hand actions, what opens/closes/pours. Used to prevent Seedance from generating physically impossible sequences.
 
-**Call 3 — Chunk prompt generation:** Claude Opus 4 with adaptive thinking generates 3 Seedance chunk prompts covering the full video. Each chunk is one Seedance API call (max 9.5s). Chunks support multiple cuts within a single generation using `| CUT |` as separator. Every shot specifies: subject, action, camera angle, movement, lighting, setting.
+**Call 3 — Chunk prompt generation:** GPT-5.5 generates 3 Seedance chunk prompts covering the full video. Each chunk is one Seedance API call (max 9.5s). Chunks support multiple cuts within a single generation using `| CUT |` as separator. Every shot specifies: subject, action, camera angle, movement, lighting, setting.
 
 The system prompt encodes all Phase 0 learnings: POV/b-roll only, no presenter to camera, handheld shake movement, lived-in environments, lighting must be imperfect, hard cuts only, TikTok safe zone awareness, physical sequences must be fully described step by step.
 
@@ -108,7 +109,7 @@ FFmpeg handles everything — no SaaS video editor.
 
 **Steps:**
 1. Transcribe MP3 via OpenAI Whisper (`whisper-1`) — word-level timestamps
-2. Claude Haiku identifies ~15% of words with highest emotional impact — these render at larger font size (pop effect)
+2. GPT-5.4 identifies ~15% of words with highest emotional impact — these render at larger font size (pop effect)
 3. Burn word-by-word captions: uppercase, bold white, black outline, 1 word at a time, ASS format, timed to Whisper output
 4. FFmpeg: combine silent video + voiceover, trim to exact audio duration, burn captions, encode H.264/AAC
 5. Output: 9:16 MP4 per script variant
@@ -150,38 +151,40 @@ Run on at least:
 ---
 
 ## Phase 3 — Minimal Web Interface
-**Duration:** 1–2 weeks
+**Status:** Complete
 **Goal:** Wrap the pipeline in a single-page web app. Status-polling download page. Auth. No payments yet.
 
 **Stack:**
-- **Next.js** — frontend (single form, status polling, download UI). Decoupled from backend — can evolve independently.
-- **FastAPI** — REST API. Receives submissions, enqueues Celery tasks, serves job status and file downloads.
-- **Celery** — Python worker. Imports and runs the pipeline directly (no subprocess). Updates job state in Redis on completion/failure.
-- **Redis** — job queue (Celery broker) + job state storage (Celery result backend). No separate database needed for Phase 3.
-- **Auth** — JWT or session-based via FastAPI. No payments.
-- **Hosting** — Railway. Single repo, three processes (FastAPI, Celery worker, Redis) configured via `railway.toml`. Billed on resource usage — cheap at low volume when the Celery worker is mostly idle.
+- **Next.js 14 (App Router)** — frontend hosted on Vercel. Single form, 4s polling, download UI.
+- **FastAPI** — REST API. Receives submissions, enqueues Celery tasks, serves job status and S3 download URLs.
+- **Celery** — Python worker. Imports and runs the pipeline directly. Writes progress to Redis on each stage completion.
+- **Redis** — Celery broker + per-job progress store (`job:{id}:progress` key, 2hr TTL).
+- **PostgreSQL** — job and user storage via SQLAlchemy. Required for multi-container access (API + worker are separate Railway services, so SQLite won't work).
+- **AWS S3** — output file storage. Worker uploads final MP4s after composition; API returns presigned download URLs (1hr expiry). Required because API and worker have separate container filesystems.
+- **Auth** — Google OAuth via FastAPI. Backend exchanges code → issues JWT → redirects to frontend with token in query param. Frontend stores token in localStorage.
+- **Hosting** — Railway (two services: API + Celery worker) + Redis plugin + PostgreSQL plugin. Next.js on Vercel.
 
 **The user flow:**
-1. User logs in
-2. Single form:
-   - Product URL (required)
-   - Optional: 3–5 benefit bullets
-   - Optional: one sentence on target audience
-3. Submit → job queued → status page shows "generating..." with live progress
-4. Status page flips to download button when complete — user downloads MP4 directly, no email
+1. User hits landing page → clicks "Sign in with Google"
+2. Google OAuth handled entirely by FastAPI backend
+3. JWT issued, user redirected to `/auth/callback?token=...` on Vercel frontend
+4. Frontend stores token, redirects to `/dashboard`
+5. User pastes Shopify product URL → submits → job queued
+6. Status page polls `/jobs/{id}` every 4s, shows stage progress bar (6 stages)
+7. On completion, download button appears — clicks generate a presigned S3 URL, browser downloads MP4 directly from S3
 
-**Job state tracked in Redis per job:**
-- Job ID
-- Status (queued / running / done / failed)
-- Run directory path
-- User ID
-- Timestamp
+**Key implementation details:**
+- `railway.toml` only sets `dockerfilePath` and `restartPolicyType` — start commands set per-service in Railway UI to avoid both services using the same command
+- API start: `sh -c 'uvicorn api.main:app --host 0.0.0.0 --port $PORT'`
+- Worker start: `celery -A api.celery_app worker --loglevel=info`
+- `DATABASE_URL` uses `postgres://` → `postgresql://` rewrite at config load time (SQLAlchemy 2.0 requirement)
+- `check_same_thread` connect arg stripped for PostgreSQL connections
+- All LLM calls use OpenAI (gpt-5.5 for Opus-equivalent, gpt-5.4 for Haiku-equivalent) — Anthropic API reserved for Claude Code
 
 **What is not being built:**
-- Dashboard or video history
 - Script editing interface
 - Voice or avatar selection
-- Format selection UI (POV/b-roll only for Phase 3)
+- Format selection UI (POV/b-roll only)
 - Brand kit, logo overlay, color matching
 - Analytics or performance tracking
 - Direct platform publishing
@@ -197,40 +200,59 @@ Run on at least:
 **Duration:** Ongoing, starting before Phase 3 is complete
 **Goal:** First 10 paying customers using "Show Don't Tell" strategy
 
-**The outreach playbook:**
-1. Find a pet product founder on Reddit or Twitter complaining about ads, UGC costs, or not getting traction
-2. Scrape their Shopify URL, run it through the pipeline manually
-3. DM them with the watermarked video already made:
-   *"Noticed you're scaling ads for [product]. I'm building an AI tool that automates UGC creation for bootstrapped stores. Ran your site through the beta — built this in 3 minutes. Want the unwatermarked version to test on Meta? Free, just want feedback."*
-4. Free offer: first 3 videos, no credit card
+**Positioning (product and inbound):**
+Center on the pain stage, not a vertical. The customer is any founder who has hit the UGC wall — cost, creator flakiness, or complexity. That pain is identical whether they sell dog brushes or supplements. Product copy, landing page examples, and framing should speak to that moment, not to pet products specifically. Pet products were useful for pipeline testing but are not the product's identity. Hair-on-fire customers self-select through the copy regardless of what they sell.
 
-**Primary channels:**
-- Reddit: r/dropshipping (239k+), r/ecommerce, r/shopify
-- Twitter/X: founders building pet brands in public
+**Outbound — find the fire:**
+Scan Reddit and Twitter for posts where founders are actively in pain: complaining about UGC costs, creator no-shows, ad creative fatigue, or not knowing where to start. These are the hair-on-fire moments. When you find one:
+1. Scrape their Shopify URL, run it through the pipeline
+2. DM them with the video already made:
+   *"Noticed you're scaling ads for [product]. I'm building an AI tool that automates UGC creation for bootstrapped stores. Ran your site through the beta — built this in 3 minutes. Want the unwatermarked version to test on Meta? It's $6 — I'll send you the link."*
+3. The watermarked demo is free — that's the hook. The self-serve product charges $6 from generation one. Someone who won't pay $6 after seeing a working demo isn't the hair-on-fire customer.
+
+**Inbound — start the fire where you already have presence:**
+Distribution needs a community focus, not a vertical focus. The right starting community is wherever you actually have presence — Twitter/X founder community first. Post about building this, show output, document what works. Founders who follow builders on Twitter are disproportionately early adopters watching the AI tools space. Reddit (r/ecommerce, r/dropshipping) is a second channel once you have early results to show — works through targeted "show don't tell" replies to specific posts, not through building a presence.
+
+**Outbound channels (scan for hair-on-fire posts):**
+- Reddit: r/dropshipping, r/ecommerce, r/shopify
+- Twitter/X: founders posting about ad creative problems
 - Discord: Ecom Guild, Demand Curve, Online Geniuses
 - Indie Hackers: founders posting about marketing failures
 
 **Avoid:**
 - Shopify Community forums (heavily moderated, ban risk)
 - Facebook groups (low signal, dropshipping spam)
+- Pet product communities specifically — no presence there, and the vertical restriction isn't needed
+
+**Sequence — what to build and when:**
+
+1. **Start outbound DMs immediately — no landing page needed.** The DM script does the selling. The watermarked video of their own product is the landing page. Send them directly to the app (Google login → paste link → generate). A landing page between the DM and the app adds a step — don't add it.
+
+2. **Build a minimal one-pager (one day) in parallel.** Required before posting on X or Reddit — inbound readers land with zero context, and a bare Google login screen loses everyone. The entire page is:
+   - Headline: what it does in one sentence ("Paste your Shopify URL. Get a UGC video ad in 3 minutes.")
+   - One or two example output videos
+   - Price: "$6/video. No subscription."
+   - Login/CTA button
+   Don't innovate on the landing page — innovation energy goes on the pipeline.
+
+3. **Post on X/Reddit only after the first 2–3 paying customers from outbound.** First paying customer validates the product is worth $6. That's the signal you want before driving inbound traffic anywhere.
 
 ---
 
 ## Revenue Milestones
 
-| Milestone | Customers | MRR | Notes |
-|-----------|-----------|-----|-------|
-| Alive | 10 | ~$1.5k | Validate quality floor + willingness to pay |
-| Ramen | 50 | ~$7.5k | Word of mouth starting in founder communities |
-| Real | 200 | ~$30k | Expand to gadget vertical |
-| Meaningful | 500 | ~$75k | Mid-market pricing tier, usage-based expansion |
+| Milestone | Signal | Notes |
+|-----------|--------|-------|
+| Alive | 10 paying generations | Validate $6 converts after seeing demo — no hesitation = hair-on-fire |
+| Traction | 50 generations/month | Word of mouth starting; some founders hitting volume → offer $49/month |
+| Ramen | 200 generations/month | ~$1.2k/month gross, ~$600–700 after COGS |
+| Real | 1k generations/month | ~$6k/month gross; subscription tier doing real work |
 
 ---
 
 ## Open Questions
 
-- **Video generation API:** Which API provides Seedance 2 access at viable cost (Fal.ai, Replicate, Segmind, or direct)? Does it accept reference images per shot? What are per-generation costs? Answer before writing Phase 1 code.
-- **Knowledge file content:** What specifically goes in hooks.md, shot-guidelines.md, and voiceover-tone.md at launch? Draft these before Stage 3 implementation — they are the system prompt for the most uncertain stage.
-- **Per-shot prompt structure:** What is the right schema for a machine-readable shot prompt that Claude outputs and Stage 5 can parse reliably? Design this interface before implementing either stage.
-- **Pricing sensitivity:** Would a pet product founder at $0–$5k/month pay $99/month? Or $49? Talk to 20 of them before setting the price.
+- **$6 conversion friction:** Does $6 hesitate or convert cleanly after seeing a demo? Answer by watching drop-off behavior after launch — not by asking beforehand.
+- **Subscription migration trigger:** At what generation volume do users ask for the subscription? Hypothesis: 10+/month. Watch for it and offer proactively.
+- **Second format timing:** 10 generations of the same product felt visually similar — format-level problem, not script variation. Direct talking-head is the first post-launch format addition. Add when users ask for it.
 - **Gadget vertical timing:** When does Seedance quality on physical objects in motion improve enough to add gadgets? Monitor quarterly.
