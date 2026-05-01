@@ -5,12 +5,12 @@ import { api, Job, Progress } from "@/lib/api";
 
 const STAGE_LABELS = [
   "",
-  "Scraping product page",
-  "Generating script",
-  "Generating video prompts",
-  "Generating voiceover",
-  "Generating video clips",
-  "Composing final video",
+  "Reading your product",
+  "Writing your ad script",
+  "Planning your shots",
+  "Recording voiceover",
+  "Filming your ad",
+  "Putting it all together",
 ];
 
 function parseProductUrl(url: string): { store: string; product: string } {

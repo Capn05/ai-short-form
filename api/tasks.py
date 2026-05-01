@@ -51,7 +51,7 @@ def run_pipeline(self, job_id: str, product_url: str):
 
     try:
         _update_job(job_id, status="running")
-        _set_progress(r, job_id, 1, "Scraping product page...", 5)
+        _set_progress(r, job_id, 1, "Reading your product...", 5)
 
         from pipeline.scraper.shopify import scrape
         product = scrape(product_url, Path("output"), skip_reviews=False)
@@ -59,24 +59,24 @@ def run_pipeline(self, job_id: str, product_url: str):
         run_id = run_dir.name
         _update_job(job_id, run_id=run_id)
 
-        _set_progress(r, job_id, 2, "Generating script...", 20)
+        _set_progress(r, job_id, 2, "Writing your ad script...", 20)
         voice_persona = _get_voice_persona()
         from pipeline.scripts.generator import generate_scripts
         generate_scripts(product, run_dir, n=1, voice_persona=voice_persona)
 
-        _set_progress(r, job_id, 3, "Generating video prompts...", 35)
+        _set_progress(r, job_id, 3, "Planning your shots...", 35)
         from pipeline.video_prompt.generator import generate_video_prompts
         generate_video_prompts(product, run_dir, voice_persona=voice_persona)
 
-        _set_progress(r, job_id, 4, "Generating voiceover...", 50)
+        _set_progress(r, job_id, 4, "Recording voiceover...", 50)
         from pipeline.voiceover.generator import generate_voiceovers
         generate_voiceovers(run_dir)
 
-        _set_progress(r, job_id, 5, "Generating video clips...", 65)
+        _set_progress(r, job_id, 5, "Filming your ad...", 65)
         from pipeline.video.generator import generate_videos
         generate_videos(run_dir)
 
-        _set_progress(r, job_id, 6, "Composing final video...", 85)
+        _set_progress(r, job_id, 6, "Putting it all together...", 85)
         from pipeline.composition.generator import compose
         compose(run_dir)
 
