@@ -60,8 +60,8 @@ export default function Dashboard() {
               {user.picture && (
                 <img src={user.picture} alt="" className="w-8 h-8 rounded-full" />
               )}
-              <span className="text-gray-400 text-sm">{user.name}</span>
-              <button onClick={signOut} className="text-gray-500 text-sm hover:text-white">
+              <span className="text-gray-500 text-sm">{user.name}</span>
+              <button onClick={signOut} className="text-gray-400 text-sm hover:text-gray-900">
                 Sign out
               </button>
             </div>
@@ -69,25 +69,25 @@ export default function Dashboard() {
         </div>
 
         {/* Form */}
-        <div className="bg-gray-900 rounded-xl p-6 space-y-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
           <h2 className="font-semibold text-lg">Generate a video ad</h2>
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Shopify product URL</label>
+              <label className="block text-sm text-gray-500 mb-1">Shopify product URL</label>
               <input
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://yourstore.myshopify.com/products/..."
                 required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gray-500"
+                className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-gray-500"
               />
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-white text-gray-900 font-medium py-3 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-gray-900 text-white font-medium py-3 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? "Submitting..." : "Generate video →"}
             </button>
@@ -102,9 +102,9 @@ export default function Dashboard() {
               <button
                 key={job.id}
                 onClick={() => router.push(`/jobs/${job.id}`)}
-                className="w-full bg-gray-900 rounded-lg px-4 py-3 text-left hover:bg-gray-800 transition-colors flex items-center justify-between"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-100 transition-colors flex items-center justify-between"
               >
-                <span className="text-sm text-gray-300 truncate max-w-sm">{job.product_url}</span>
+                <span className="text-sm text-gray-700 truncate max-w-sm">{job.product_url}</span>
                 <StatusBadge status={job.status} />
               </button>
             ))}
@@ -117,10 +117,10 @@ export default function Dashboard() {
 
 function StatusBadge({ status }: { status: Job["status"] }) {
   const colors: Record<Job["status"], string> = {
-    queued: "bg-gray-700 text-gray-300",
-    running: "bg-blue-900 text-blue-300",
-    done: "bg-green-900 text-green-300",
-    failed: "bg-red-900 text-red-300",
+    queued: "bg-gray-100 text-gray-600",
+    running: "bg-blue-50 text-blue-600",
+    done: "bg-green-50 text-green-700",
+    failed: "bg-red-50 text-red-600",
   };
   return (
     <span className={`text-xs px-2 py-1 rounded-full font-medium ${colors[status]}`}>

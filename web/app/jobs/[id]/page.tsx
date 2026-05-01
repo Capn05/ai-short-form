@@ -62,7 +62,7 @@ export default function JobPage() {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-red-400">{error}</p>
+        <p className="text-red-500">{error}</p>
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default function JobPage() {
   if (!job) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-400">Loading...</p>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function JobPage() {
     <main className="min-h-screen px-4 py-10">
       <div className="max-w-xl mx-auto space-y-8">
 
-        <button onClick={() => router.push("/dashboard")} className="text-gray-500 text-sm hover:text-white">
+        <button onClick={() => router.push("/dashboard")} className="text-gray-400 text-sm hover:text-gray-900">
           ← Back
         </button>
 
@@ -96,14 +96,14 @@ export default function JobPage() {
 
         {/* Progress */}
         {(job.status === "queued" || job.status === "running") && (
-          <div className="bg-gray-900 rounded-xl p-6 space-y-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-300">{message}</span>
-              <span className="text-gray-500">{percent}%</span>
+              <span className="text-gray-700">{message}</span>
+              <span className="text-gray-400">{percent}%</span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className="bg-white h-2 rounded-full transition-all duration-500"
+                className="bg-gray-900 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>
@@ -111,29 +111,29 @@ export default function JobPage() {
               {STAGE_LABELS.slice(1).map((label, i) => (
                 <div
                   key={i}
-                  className={`h-1 rounded-full ${i + 1 <= stage ? "bg-white" : "bg-gray-800"}`}
+                  className={`h-1 rounded-full ${i + 1 <= stage ? "bg-gray-900" : "bg-gray-200"}`}
                   title={label}
                 />
               ))}
             </div>
-            <p className="text-gray-600 text-xs">This takes 8–12 minutes. You can close this tab and come back.</p>
+            <p className="text-gray-400 text-xs">This takes 8–12 minutes. You can close this tab and come back.</p>
           </div>
         )}
 
         {/* Done */}
         {job.status === "done" && files.length > 0 && (
-          <div className="bg-gray-900 rounded-xl p-6 space-y-4">
-            <p className="text-green-400 font-medium">✓ Your video is ready</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
+            <p className="text-green-600 font-medium">✓ Your video is ready</p>
             <div className="space-y-2">
               {files.map((f) => (
                 <button
                   key={f}
                   onClick={() => download(f)}
                   disabled={downloading === f}
-                  className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-between bg-white border border-gray-200 hover:bg-gray-50 rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
                 >
-                  <span className="text-sm font-mono text-gray-300">{f}</span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm font-mono text-gray-700">{f}</span>
+                  <span className="text-sm text-gray-400">
                     {downloading === f ? "Downloading..." : "Download ↓"}
                   </span>
                 </button>
@@ -141,7 +141,7 @@ export default function JobPage() {
             </div>
             <button
               onClick={() => router.push("/dashboard")}
-              className="w-full text-sm text-gray-500 hover:text-white pt-2"
+              className="w-full text-sm text-gray-400 hover:text-gray-900 pt-2"
             >
               Generate another →
             </button>
@@ -150,12 +150,12 @@ export default function JobPage() {
 
         {/* Failed */}
         {job.status === "failed" && (
-          <div className="bg-gray-900 rounded-xl p-6 space-y-3">
-            <p className="text-red-400 font-medium">Generation failed</p>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-3">
+            <p className="text-red-500 font-medium">Generation failed</p>
             {job.error && <p className="text-gray-500 text-sm font-mono">{job.error}</p>}
             <button
               onClick={() => router.push("/dashboard")}
-              className="text-sm text-gray-500 hover:text-white"
+              className="text-sm text-gray-400 hover:text-gray-900"
             >
               ← Try again
             </button>
