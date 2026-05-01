@@ -1,6 +1,8 @@
 import json
+import re
 import subprocess
 from pathlib import Path
+from urllib.parse import urlparse
 
 from openai import OpenAI
 
@@ -26,6 +28,9 @@ def compose(run_dir: Path) -> list[dict]:
         video_data = json.load(f)
 
     audio_by_id = {a["script_type_id"]: a for a in audio_data}
+
+    product_slug = _product_slug(run_dir)
+    run_short_id = run_dir.name[:6]
 
     final_dir = run_dir / "final"
     final_dir.mkdir(exist_ok=True)
@@ -57,7 +62,8 @@ def compose(run_dir: Path) -> list[dict]:
         _write_ass(words, ass_path)
 
         # Step 3 — FFmpeg: trim + burn subs + mix audio
-        output_path = final_dir / f"final_{i + 1:02d}_{slug}.mp4"
+        variant_suffix = f"_{i + 1}" if len(video_data) > 1 else ""
+        output_path = final_dir / f"{product_slug}_{run_short_id}{variant_suffix}.mp4"
         print(f"  composing...")
         _ffmpeg_compose(silent_mp4, mp3_path, ass_path, duration, output_path)
         print(f"  → {output_path.name} ({duration:.1f}s)")
@@ -207,3 +213,19 @@ def _ass_escape(text: str) -> str:
 
 def _escape_filter_path(path: str) -> str:
     return path.replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
+
+
+def _product_slug(run_dir: Path) -> str:
+    try:
+        product_json = run_dir / "product.json"
+        with open(product_json) as f:
+            data = json.load(f)
+        url = data.get("url", "")
+        path = urlparse(url).path
+        parts = [p for p in path.split("/") if p]
+        handle = parts[parts.index("products") + 1] if "products" in parts else ""
+        if handle:
+            return re.sub(r"[^a-z0-9-]", "", handle.lower())[:40]
+    except Exception:
+        pass
+    return "video"

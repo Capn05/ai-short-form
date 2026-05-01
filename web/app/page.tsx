@@ -81,7 +81,7 @@ export default function Home() {
           ].map(({ step, label }) => (
             <div key={step} className="space-y-2">
               <div className="text-3xl font-bold text-gray-200">{step}</div>
-              <p className="text-gray-600 text-sm">{label}</p>
+              <p className="text-gray-600 text-base">{label}</p>
             </div>
           ))}
         </div>
@@ -89,8 +89,8 @@ export default function Home() {
 
       {/* Bottom CTA */}
       <section className="px-4 pb-24 flex flex-col items-center gap-4 text-center">
-        <h2 className="text-2xl font-bold">Try it on your product</h2>
-        <p className="text-gray-500 text-sm max-w-sm">Takes 8–12 minutes. $6 per video. No subscription.</p>
+        <h2 className="text-3xl font-bold">Try it on your product</h2>
+        <p className="text-gray-500 text-base max-w-sm">Takes 8–12 minutes. $6 per video. No subscription.</p>
         <a
           href={`${API}/auth/google`}
           className="flex items-center justify-center gap-3 px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"

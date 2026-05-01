@@ -54,7 +54,7 @@ export default function Dashboard() {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">AI Short Form</h1>
+          <h1 className="text-3xl font-bold">AI Short Form</h1>
           {user && (
             <div className="flex items-center gap-3">
               {user.picture && (
@@ -70,7 +70,7 @@ export default function Dashboard() {
 
         {/* Form */}
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
-          <h2 className="font-semibold text-lg">Generate a video ad</h2>
+          <h2 className="font-semibold text-xl">Generate a video ad</h2>
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="block text-sm text-gray-500 mb-1">Shopify product URL</label>
@@ -104,11 +104,11 @@ export default function Dashboard() {
                 <button
                   key={job.id}
                   onClick={() => router.push(`/jobs/${job.id}`)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-100 transition-colors flex items-center justify-between"
+                  className="w-full bg-white border border-gray-300 shadow-sm rounded-lg px-4 py-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{product}</p>
-                    <p className="text-xs text-gray-400 truncate">{store}</p>
+                    <p className="text-base font-medium text-gray-800 truncate">{product}</p>
+                    <p className="text-sm text-gray-400 truncate">{store}</p>
                   </div>
                   <StatusBadge status={job.status} />
                 </button>
@@ -142,7 +142,7 @@ function StatusBadge({ status }: { status: Job["status"] }) {
     failed: "bg-red-50 text-red-600",
   };
   return (
-    <span className={`text-xs px-2 py-1 rounded-full font-medium ${colors[status]}`}>
+    <span className={`text-sm px-2 py-1 rounded-full font-medium ${colors[status]}`}>
       {status}
     </span>
   );
