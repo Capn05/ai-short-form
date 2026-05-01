@@ -97,22 +97,41 @@ export default function Dashboard() {
         {/* Job history */}
         {jobs.length > 0 && (
           <div className="space-y-3">
-            <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wider">Recent jobs</h2>
-            {jobs.map((job) => (
-              <button
-                key={job.id}
-                onClick={() => router.push(`/jobs/${job.id}`)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-100 transition-colors flex items-center justify-between"
-              >
-                <span className="text-sm text-gray-700 truncate max-w-sm">{job.product_url}</span>
-                <StatusBadge status={job.status} />
-              </button>
-            ))}
+            <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wider">Your videos</h2>
+            {jobs.map((job) => {
+              const { store, product } = parseProductUrl(job.product_url);
+              return (
+                <button
+                  key={job.id}
+                  onClick={() => router.push(`/jobs/${job.id}`)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-100 transition-colors flex items-center justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{product}</p>
+                    <p className="text-xs text-gray-400 truncate">{store}</p>
+                  </div>
+                  <StatusBadge status={job.status} />
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
     </main>
   );
+}
+
+function parseProductUrl(url: string): { store: string; product: string } {
+  try {
+    const { hostname, pathname } = new URL(url);
+    const store = hostname.replace(".myshopify.com", "").replace(/^www\./, "");
+    const parts = pathname.split("/").filter(Boolean);
+    const handle = parts[parts.indexOf("products") + 1] ?? "";
+    const product = handle.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return { store, product: product || url };
+  } catch {
+    return { store: "", product: url };
+  }
 }
 
 function StatusBadge({ status }: { status: Job["status"] }) {
