@@ -93,4 +93,6 @@ def run_pipeline(self, job_id: str, product_url: str):
     except Exception as e:
         _update_job(job_id, status="failed", error=str(e))
         _set_progress(r, job_id, 0, f"Failed: {e}", 0)
+        if "run_dir" in dir():
+            shutil.rmtree(run_dir, ignore_errors=True)
         raise
