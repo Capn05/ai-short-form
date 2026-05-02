@@ -54,25 +54,25 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        if session.get("payment_status") != "paid":
+        if session.payment_status != "paid":
             return {"status": "ignored"}
 
-        stripe_session_id = session["id"]
+        stripe_session_id = session.id
 
         # Idempotency — ignore if already processed
         if db.query(Purchase).filter(Purchase.stripe_session_id == stripe_session_id).first():
             return {"status": "already_processed"}
 
-        user_id = int(session["metadata"]["user_id"])
-        generations = int(session["metadata"]["generations"])
+        user_id = int(session.metadata["user_id"])
+        generations = int(session.metadata["generations"])
 
         db.query(User).filter(User.id == user_id).update({"credits": User.credits + generations})
         db.add(Purchase(
             user_id=user_id,
             stripe_session_id=stripe_session_id,
-            stripe_payment_intent_id=session.get("payment_intent"),
+            stripe_payment_intent_id=session.payment_intent,
             generations=generations,
-            amount_cents=session["amount_total"],
+            amount_cents=session.amount_total,
         ))
         db.commit()
 
