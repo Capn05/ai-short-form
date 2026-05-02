@@ -10,6 +10,7 @@ const VIDEOS = [
   "https://ai-short-form-output.s3.amazonaws.com/public/demo5.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo6.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo7.mp4",
+  "https://ai-short-form-output.s3.amazonaws.com/public/demo8.mp4",
 ];
 
 export default function Home() {
