@@ -9,9 +9,9 @@ from api.database import get_db, User, Purchase
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 PACKS = [
-    {"id": "pack_1",  "generations": 1,  "price_cents": 600,  "label": "1 video",   "per_video": "$6.00"},
-    {"id": "pack_5",  "generations": 5,  "price_cents": 2500, "label": "5 videos",  "per_video": "$5.00 each"},
-    {"id": "pack_10", "generations": 10, "price_cents": 4000, "label": "10 videos", "per_video": "$4.00 each"},
+    {"id": "pack_1",  "generations": 1,  "price_id": "price_1TSWLPGWUrOVEtyUDrYoTjAC", "label": "1 video",   "per_video": "$6.00"},
+    {"id": "pack_5",  "generations": 5,  "price_id": "price_1TSWQBGWUrOVEtyU7ensoVrr", "label": "5 videos",  "per_video": "$5.40 each"},
+    {"id": "pack_10", "generations": 10, "price_id": "price_1TSWR7GWUrOVEtyUk4JYwdFn", "label": "10 videos", "per_video": "$5.00 each"},
 ]
 
 
@@ -29,17 +29,7 @@ def create_checkout(pack_id: str, db: Session = Depends(get_db), user: User = De
     stripe.api_key = settings.STRIPE_SECRET_KEY
     session = stripe.checkout.Session.create(
         mode="payment",
-        line_items=[{
-            "price_data": {
-                "currency": "usd",
-                "unit_amount": pack["price_cents"],
-                "product_data": {
-                    "name": f"AI Short Form — {pack['label']}",
-                    "description": f"{pack['generations']} video generation{'s' if pack['generations'] > 1 else ''}",
-                },
-            },
-            "quantity": 1,
-        }],
+        line_items=[{"price": pack["price_id"], "quantity": 1}],
         metadata={
             "user_id": str(user.id),
             "generations": str(pack["generations"]),
