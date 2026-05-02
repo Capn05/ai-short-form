@@ -66,13 +66,13 @@ export default function Home() {
 
       {/* Carousel */}
       <section className="pb-20 px-4">
-        <p className="text-center text-gray-400 text-sm uppercase tracking-widest mb-8">Example outputs</p>
+        <p className="text-center text-gray-700 text-sm font-semibold uppercase tracking-widest mb-8">Example outputs</p>
         <VideoCarousel />
       </section>
 
       {/* How it works */}
       <section className="px-4 pb-20 max-w-2xl mx-auto space-y-6">
-        <p className="text-center text-gray-400 text-sm uppercase tracking-widest">How it works</p>
+        <p className="text-center text-gray-700 text-sm font-semibold uppercase tracking-widest">How it works</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
           {[
             { step: "1", label: "Paste your Shopify product URL" },
@@ -80,7 +80,7 @@ export default function Home() {
             { step: "3", label: "Download your MP4 and run it on Meta or TikTok" },
           ].map(({ step, label }) => (
             <div key={step} className="space-y-2">
-              <div className="text-3xl font-bold text-gray-200">{step}</div>
+              <div className="text-3xl font-bold text-gray-700">{step}</div>
               <p className="text-gray-600 text-base">{label}</p>
             </div>
           ))}

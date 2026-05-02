@@ -53,8 +53,9 @@ function DashboardContent() {
   useEffect(() => {
     if (searchParams.get("payment") === "success") {
       setPaymentSuccess(true);
-      const t = setTimeout(() => loadUser(), 3000);
-      return () => clearTimeout(t);
+      const t1 = setTimeout(() => loadUser(), 3000);
+      const t2 = setTimeout(() => setPaymentSuccess(false), 6000);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [searchParams, loadUser]);
 

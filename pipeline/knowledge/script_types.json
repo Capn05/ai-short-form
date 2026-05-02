@@ -4,7 +4,7 @@
     "name": "Pattern Interrupt Hook",
     "description": "Opens with a surprising statement, bold claim, or unexpected visual/action that stops the scroll. Highest click-through of any hook type per Billo data.",
     "instruction": "Start with a single line that shocks or surprises — a counterintuitive fact, a bold claim, or something that breaks expectations. Then back it up with specific product proof. Keep the whole script under 30 seconds. No warm-up or preamble.",
-    "example": "Your dog is bored out of their mind. Most owners don't realize it — but this $20 fix changed everything.",
+    "example": "I spent $300 on the professional version. My friend spent $40 on this. Her results were better. I haven't forgiven her yet.",
     "cta_guidance": "Match the energy of the hook — direct and slightly incredulous. Structures: 'this is the one I keep telling people about', 'if you haven't tried this yet, I don't know what you're waiting for', 'I genuinely didn't think it would work this well'. Avoid 'you need to try this'."
   },
   {
@@ -12,23 +12,23 @@
     "name": "Curiosity Gap / Open Loop",
     "description": "Poses a question or hints at a reveal to make viewers watch to the end. Works by withholding satisfying information just long enough.",
     "instruction": "Open with a question or half-revealed benefit that creates tension. Deliver the reveal mid-script, then close with the result or CTA. The viewer must feel they'd miss out by scrolling past.",
-    "example": "I tried everything to slow my dog down at dinner. Nothing worked — until I found this.",
-    "cta_guidance": "Pay off the open loop — the CTA is the resolution. Structures: 'I'm not going back', 'worth trying if your dog [specific problem]', 'I wasn't expecting much and now I have three of them'. Avoid 'you need to try this'."
+    "example": "I tried every supplement on the market for two years. Nothing touched it — until a friend sent me this link at midnight.",
+    "cta_guidance": "Pay off the open loop — the CTA is the resolution. Structures: 'I'm not going back', 'worth trying if you deal with [specific problem]', 'I wasn't expecting much and now I have three of them'. Avoid 'you need to try this'."
   },
   {
     "id": "social_proof",
     "name": "Social Proof / Testimonial",
     "description": "Leads with a real customer result or relatable confession, then explains the product. Highest trust signal available in UGC.",
     "instruction": "Use the review data as the emotional anchor. Open with the customer's specific result or moment of surprise. Then describe what the product does to explain why that happened. Close with CTA.",
-    "example": "She normally inhales her food in 60 seconds. With this, she took 40 minutes — and tried to take it to bed.",
-    "cta_guidance": "Lean on collective validation. Structures: 'every dog owner I've shown this to has ordered one', 'if your dog [specific problem], it's worth a shot', 'the reviews sold me and now I'm the review'. Avoid 'you need to try this'."
+    "example": "I almost didn't buy it because I'd been burned before. Then I read the reviews and took the chance. Now I tell everyone about it.",
+    "cta_guidance": "Lean on collective validation. Structures: 'everyone I've told about this has ordered one', 'if you deal with [specific problem], it's worth a shot', 'the reviews sold me and now I'm the review'. Avoid 'you need to try this'."
   },
   {
     "id": "problem_agitate",
     "name": "Problem-Agitate-Solve (PAS)",
     "description": "Classic direct-response structure: name the pain, make it feel real, then present the product as relief. Highest conversion on cold traffic.",
-    "instruction": "Spend the first third naming the specific problem the target owner faces. Agitate it — describe how frustrating or worrying it is. Then introduce the product as the clean solution. No fluff.",
-    "example": "If your dog eats too fast, you know the bloat panic. The gulping sound. The cleanup. This finally fixed it.",
+    "instruction": "Spend the first third naming the specific problem the target customer faces. Agitate it — describe how frustrating or worrying it is. Then introduce the product as the clean solution. No fluff.",
+    "example": "Three months of bad sleep. Exhausted every morning, dragging through every afternoon. Tried everything with nothing to show for it. This fixed it in a week.",
     "cta_guidance": "Frame the CTA as relief — escaping the problem, not gaining something new. Structures: 'if you're still dealing with [problem], this is worth it', 'worth every penny to not deal with [problem] anymore', 'I just wish I'd found it sooner'. Avoid 'you need to try this'."
   },
   {
@@ -36,31 +36,31 @@
     "name": "Before / After Transformation",
     "description": "Shows or narrates a clear before-state and after-state. One of the most shareable formats because the contrast is emotionally satisfying.",
     "instruction": "Describe the 'before' in vivid, relatable terms — what life looked like without the product. Then paint the 'after' just as vividly. Keep both halves roughly equal in length. Close with the product name and price.",
-    "example": "Before: 30 seconds, bowl licked clean, pacing. After: 40 minutes of focused licking, calm, satisfied. Same dog.",
-    "cta_guidance": "Reference the transformation — looking back, not looking forward. Structures: 'I wish I'd found this sooner', 'don't wait as long as I did', 'the difference is hard to overstate if your dog [specific problem]'. Avoid 'you need to try this'."
+    "example": "Before: frustrated, stuck, trying everything. After: calm, sorted, actually works. Same problem — completely different result.",
+    "cta_guidance": "Reference the transformation — looking back, not looking forward. Structures: 'I wish I'd found this sooner', 'don't wait as long as I did', 'the difference is hard to overstate if you deal with [specific problem]'. Avoid 'you need to try this'."
   },
   {
     "id": "educational_wow",
     "name": "Educational 'Did You Know'",
-    "description": "Teaches the viewer something surprising about their pet or the product's benefit. Builds authority and gets shared. Works especially well for enrichment and health products.",
-    "instruction": "Open with a genuine fact or insight most pet owners don't know. Connect it directly to a problem the product solves. End with the product as the actionable takeaway. Keep the tone curious and warm, not lecture-y.",
-    "example": "Dogs are meant to work for their food — it's in their DNA. That's why this lick mat drops anxiety by making mealtime a 30-minute job.",
-    "cta_guidance": "Frame the CTA as the natural next step after learning something. Structures: 'now I keep one on hand', 'once you know this, it's hard to ignore', 'if your dog [specific problem], this is the fix that actually makes sense'. Avoid 'you need to try this'."
+    "description": "Teaches the viewer something surprising about the product's category or benefit. Builds authority and gets shared. Works especially well for health, wellness, and enrichment products.",
+    "instruction": "Open with a genuine fact or insight most people in this product's target audience don't know. Connect it directly to a problem the product solves. End with the product as the actionable takeaway. Keep the tone curious and warm, not lecture-y.",
+    "example": "Your body can't absorb most supplements taken without food — which is why you feel nothing from them. This is formulated specifically to fix that. The difference is not subtle.",
+    "cta_guidance": "Frame the CTA as the natural next step after learning something. Structures: 'now I keep one on hand', 'once you know this, it's hard to ignore', 'if you deal with [specific problem], this is the fix that actually makes sense'. Avoid 'you need to try this'."
   },
   {
     "id": "personal_story",
     "name": "Personal Story / Day-in-the-Life",
     "description": "Narrates a specific moment or day where the product made a difference. Feels authentic, drives emotional connection.",
-    "instruction": "Pick one specific scenario — a meal, a vet visit, a moment of calm — and walk through it in first or third person. Use sensory detail. The product should appear naturally as part of the story, not as an ad.",
-    "example": "Rainy Sunday, dog losing her mind indoors. Pulled this out, stuck it to the wall with peanut butter. Forty minutes of peace.",
-    "cta_guidance": "End the story naturally — the CTA is the lesson learned, not a sales push. Structures: 'it's part of our routine now', 'best [price point] I've spent for her', 'if you're in the same situation I was, just try it'. Avoid 'you need to try this'."
+    "instruction": "Pick one specific scenario and walk through it in first or third person. Use sensory detail. The product should appear naturally as part of the story, not as an ad.",
+    "example": "Rough week. Nothing was working. Tried this almost out of desperation. By the end of the day I actually felt like myself again.",
+    "cta_guidance": "End the story naturally — the CTA is the lesson learned, not a sales push. Structures: 'it's part of my routine now', 'best [price point] I've spent on myself', 'if you're in the same situation I was, just try it'. Avoid 'you need to try this'."
   },
   {
     "id": "comparison",
     "name": "Comparison / Us vs Them",
     "description": "Contrasts this product against the generic alternative (buying cheap, doing nothing, or the category default). Validates the purchase decision.",
     "instruction": "Set up a clear comparison: the old way vs. this product. Be specific — name the frustration of the old way, then show how this is different. Avoid naming competitors. Close with price or value frame.",
-    "example": "Regular slow feeders: figured out in two minutes. This lick mat and feeder combo: still going at 40 minutes.",
+    "example": "The cheap version: worked for a week, then nothing. This one: still going strong months later and actually does what it says.",
     "cta_guidance": "Validate the switch — the CTA is about not going back. Structures: 'I'm not going back to [the old way]', 'worth the price difference', 'if you've tried the cheap version and it didn't work, this is why'. Avoid 'you need to try this'."
   },
   {
@@ -68,15 +68,15 @@
     "name": "Urgency / Scarcity",
     "description": "Creates time pressure or limited-availability framing. Most effective when paired with a strong product claim. Use sparingly — loses power if overused.",
     "instruction": "Build the product's value first with one strong benefit. Then add natural urgency — a reason to act now (not fake countdown pressure, but real framing like gift season, the problem getting worse, etc.). End with a direct CTA.",
-    "example": "Summer's coming and your dog's going to be cooped up. This is the one thing that actually keeps them occupied. Worth every dollar.",
+    "example": "I waited three weeks to order this because I wasn't sure. That was three weeks of dealing with something I didn't have to deal with. Don't do what I did.",
     "cta_guidance": "The CTA carries the urgency — act now, specific reason. Structures: 'grab one before [real seasonal or situational reason]', 'the longer you wait the worse [specific problem] gets', 'these sell out — just get it'. Avoid 'you need to try this'."
   },
   {
     "id": "aspirational_identity",
-    "name": "Aspirational Identity / 'Dog Parents Who Get It'",
-    "description": "Frames the purchase as an identity signal — this is what good dog owners do. Taps into the viewer's self-concept rather than just product features.",
-    "instruction": "Open by addressing 'the kind of owner who actually cares.' Make the viewer feel seen and validated. Position the product as what people like them naturally reach for. Don't hard-sell — let the identity do the work.",
-    "example": "If you're the type of dog parent who Googles 'how to keep my dog mentally stimulated' at midnight — this was made for you.",
-    "cta_guidance": "Reinforce the identity, not the product. Structures: 'this is just what we do now', 'if you're that kind of dog parent, you already know', 'it's a small thing that says a lot about how much you care'. Avoid 'you need to try this'."
+    "name": "Aspirational Identity",
+    "description": "Frames the purchase as an identity signal — this is what people who actually care do. Taps into the viewer's self-concept rather than just product features.",
+    "instruction": "Open by addressing the kind of person who takes this seriously. Make the viewer feel seen and validated for caring about this. Position the product as what people like them naturally reach for. Don't hard-sell — let the identity do the work.",
+    "example": "If you're the type of person who reads the ingredient list before buying anything — you're going to like this.",
+    "cta_guidance": "Reinforce the identity, not the product. Structures: 'this is just what I do now', 'if you're that kind of person, you already know', 'it's a small thing that says a lot about how much you care'. Avoid 'you need to try this'."
   }
 ]
