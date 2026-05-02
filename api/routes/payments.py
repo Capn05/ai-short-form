@@ -30,6 +30,7 @@ def create_checkout(pack_id: str, db: Session = Depends(get_db), user: User = De
     session = stripe.checkout.Session.create(
         mode="payment",
         line_items=[{"price": pack["price_id"], "quantity": 1}],
+        allow_promotion_codes=True,
         metadata={
             "user_id": str(user.id),
             "generations": str(pack["generations"]),
