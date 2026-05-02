@@ -48,7 +48,7 @@ def generate_video_prompts(product: dict, run_dir: Path, voice_persona: str | No
     prompts_dir = run_dir / "video_prompts"
     prompts_dir.mkdir(exist_ok=True)
 
-    client = OpenAI()
+    client = OpenAI(max_retries=5)
 
     # Call 1: pick reference image from all product images
     all_image_blocks = _load_images(product.get("images", []), limit=8)

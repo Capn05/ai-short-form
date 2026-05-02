@@ -115,6 +115,10 @@ def _nearest_duration(target: float) -> int:
     return VALID_DURATIONS[-1]
 
 
+CHUNK_TIMEOUT = 900  # 15 minutes max per chunk
+POLL_INTERVAL = 5   # seconds between status checks
+
+
 def _generate_chunk(
     chunk: dict,
     output_path: Path,
@@ -136,6 +140,7 @@ def _generate_chunk(
         prompt = f"{prompt} Maintain visual consistency with the reference video."
 
     for attempt in range(MAX_RETRIES + 1):
+        prediction = None
         try:
             inp = {
                 "prompt": prompt,
@@ -145,19 +150,46 @@ def _generate_chunk(
                 "generate_audio": False,
             }
 
-            if valid_refs:
-                inp["reference_images"] = [open(p, "rb") for p in valid_refs]
+            ref_image_handles = [open(p, "rb") for p in valid_refs]
+            ref_video_handle = open(ref_video, "rb") if has_video else None
 
-            if has_video:
-                inp["reference_videos"] = [open(ref_video, "rb")]
+            if ref_image_handles:
+                inp["reference_images"] = ref_image_handles
+            if ref_video_handle:
+                inp["reference_videos"] = [ref_video_handle]
 
-            output = replicate.run(MODEL, input=inp)
+            prediction = replicate.predictions.create(model=MODEL, input=inp)
 
-            url = output if isinstance(output, str) else output.url
+            for handle in ref_image_handles:
+                handle.close()
+            if ref_video_handle:
+                ref_video_handle.close()
+
+            print(f"    prediction {prediction.id} submitted, polling...")
+
+            elapsed = 0
+            while prediction.status not in ("succeeded", "failed", "canceled"):
+                time.sleep(POLL_INTERVAL)
+                elapsed += POLL_INTERVAL
+                prediction.reload()
+                if elapsed >= CHUNK_TIMEOUT:
+                    prediction.cancel()
+                    raise RuntimeError(f"Chunk timed out after {CHUNK_TIMEOUT}s (prediction {prediction.id})")
+
+            if prediction.status != "succeeded":
+                raise RuntimeError(f"Prediction {prediction.id} {prediction.status}: {prediction.error}")
+
+            output = prediction.output
+            url = output if isinstance(output, str) else (output[0] if isinstance(output, list) else output.url)
             _download(url, output_path)
             return
 
         except Exception as e:
+            if prediction and prediction.status not in ("succeeded", "failed", "canceled"):
+                try:
+                    prediction.cancel()
+                except Exception:
+                    pass
             if attempt < MAX_RETRIES:
                 is_pa = "code: PA" in str(e) or "interrupted" in str(e).lower()
                 wait = 60 if is_pa else 15 * (attempt + 1)
@@ -173,7 +205,7 @@ def _clean_reference_images(image_paths: list[str], run_dir: Path) -> list[str]:
     cleaned_dir = run_dir / "images_cleaned"
     cleaned_dir.mkdir(exist_ok=True)
 
-    client = OpenAI()
+    client = OpenAI(max_retries=5)
     results = []
 
     for path_str in image_paths:

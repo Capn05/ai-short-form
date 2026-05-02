@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -83,6 +84,8 @@ def run_pipeline(self, job_id: str, product_url: str):
         _set_progress(r, job_id, 6, "Uploading...", 95)
         from api.s3 import upload_run_files
         upload_run_files(run_dir, run_id)
+
+        shutil.rmtree(run_dir, ignore_errors=True)
 
         _update_job(job_id, status="done")
         _set_progress(r, job_id, 6, "Done!", 100)

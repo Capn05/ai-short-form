@@ -35,7 +35,7 @@ def compose(run_dir: Path) -> list[dict]:
     final_dir = run_dir / "final"
     final_dir.mkdir(exist_ok=True)
 
-    client = OpenAI()
+    client = OpenAI(max_retries=5)
     results = []
 
     for i, video in enumerate(video_data):
@@ -131,7 +131,7 @@ def _mark_pop_words(words: list[dict]) -> None:
     if not words:
         return
     try:
-        ac = OpenAI()
+        ac = OpenAI(max_retries=5)
         transcript = " ".join(f"{i}:{w['word']}" for i, w in enumerate(words))
         response = ac.chat.completions.create(
             model="gpt-5.4",

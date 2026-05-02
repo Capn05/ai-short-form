@@ -64,7 +64,7 @@ def generate_scripts(product: dict, output_dir: Path, n: int = 2, voice_persona:
     scripts_dir = output_dir / "scripts"
     scripts_dir.mkdir(exist_ok=True)
 
-    client = OpenAI()
+    client = OpenAI(max_retries=5)
     results = []
 
     for i, script_type in enumerate(chosen):

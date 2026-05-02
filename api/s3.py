@@ -13,15 +13,28 @@ def _client():
 
 
 def upload_run_files(run_dir: Path, run_id: str) -> list[str]:
-    """Upload all .mp4 files from run_dir/final/ to S3. Returns list of S3 keys."""
+    """Upload final MP4s and review artifacts to S3 under runs/{run_id}/. Returns list of S3 keys."""
     client = _client()
-    final_dir = run_dir / "final"
     keys = []
+
+    final_dir = run_dir / "final"
     for f in sorted(final_dir.iterdir()):
         if f.suffix == ".mp4":
             key = f"runs/{run_id}/{f.name}"
             client.upload_file(str(f), settings.AWS_S3_BUCKET, key)
             keys.append(key)
+
+    review_files = [
+        run_dir / "product.json",
+        run_dir / "scripts" / "scripts.json",
+        run_dir / "video_prompts" / "video_prompts.json",
+    ]
+    for f in review_files:
+        if f.exists():
+            key = f"runs/{run_id}/{f.name}"
+            client.upload_file(str(f), settings.AWS_S3_BUCKET, key)
+            keys.append(key)
+
     return keys
 
 

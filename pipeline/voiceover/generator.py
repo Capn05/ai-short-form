@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from pathlib import Path
 
 from elevenlabs import VoiceSettings
@@ -80,14 +81,24 @@ def generate_voiceovers(run_dir: Path) -> list[dict]:
 
 
 def _call_elevenlabs(client: ElevenLabs, text: str) -> bytes:
-    audio_generator = client.text_to_speech.convert(
-        voice_id=VOICE_ID,
-        text=f"[fast paced]{text}",
-        model_id=MODEL_ID,
-        output_format=OUTPUT_FORMAT,
-        voice_settings=VOICE_SETTINGS,
-    )
-    return b"".join(audio_generator)
+    for attempt in range(5):
+        try:
+            audio_generator = client.text_to_speech.convert(
+                voice_id=VOICE_ID,
+                text=f"[fast paced]{text}",
+                model_id=MODEL_ID,
+                output_format=OUTPUT_FORMAT,
+                voice_settings=VOICE_SETTINGS,
+            )
+            return b"".join(audio_generator)
+        except Exception as e:
+            if attempt == 4:
+                raise
+            err = str(e)
+            if "429" in err or "rate" in err.lower() or "too many" in err.lower():
+                time.sleep(2 ** attempt)
+            else:
+                raise
 
 
 def _get_duration(mp3_path: Path) -> float:

@@ -27,6 +27,14 @@ class SubmitRequest(BaseModel):
 def submit_job(body: SubmitRequest, db: Session = Depends(get_db), user: User = Depends(current_user)):
     from api.tasks import run_pipeline
 
+    active = (
+        db.query(Job)
+        .filter(Job.user_id == user.id, Job.status.in_(["queued", "running"]))
+        .count()
+    )
+    if active >= 1:
+        raise HTTPException(status_code=429, detail="You already have a job in progress. Wait for it to finish before submitting another.")
+
     job_id = str(uuid.uuid4())
     job = Job(id=job_id, user_id=user.id, product_url=body.product_url)
     db.add(job)

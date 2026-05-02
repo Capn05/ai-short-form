@@ -205,7 +205,7 @@ def _extract_image_features(product_name: str, description: str, image_paths: li
         if not loaded:
             return ""
 
-        client = OpenAI()
+        client = OpenAI(max_retries=5)
         response = client.chat.completions.create(
             model="gpt-5.4",
             max_completion_tokens=400,
