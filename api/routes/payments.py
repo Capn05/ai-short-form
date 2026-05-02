@@ -9,9 +9,9 @@ from api.database import get_db, User, Purchase
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 PACKS = [
-    {"id": "pack_1",  "generations": 1,  "price_id": "price_1TSWLPGWUrOVEtyUDrYoTjAC", "label": "1 video",   "per_video": "$6.00"},
-    {"id": "pack_5",  "generations": 5,  "price_id": "price_1TSWQBGWUrOVEtyU7ensoVrr", "label": "5 videos",  "per_video": "$5.40 each"},
-    {"id": "pack_10", "generations": 10, "price_id": "price_1TSWR7GWUrOVEtyUk4JYwdFn", "label": "10 videos", "per_video": "$5.00 each"},
+    {"id": "pack_1",  "generations": 1,  "price_cents": 600,  "price_id": "price_1TSWLPGWUrOVEtyUDrYoTjAC", "label": "1 video",   "per_video": "$6.00"},
+    {"id": "pack_5",  "generations": 5,  "price_cents": 2700, "price_id": "price_1TSWQBGWUrOVEtyU7ensoVrr", "label": "5 videos",  "per_video": "$5.40 each"},
+    {"id": "pack_10", "generations": 10, "price_cents": 5000, "price_id": "price_1TSWR7GWUrOVEtyUk4JYwdFn", "label": "10 videos", "per_video": "$5.00 each"},
 ]
 
 

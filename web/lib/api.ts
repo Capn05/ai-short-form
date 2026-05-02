@@ -72,6 +72,7 @@ export interface Pack {
   id: string;
   generations: number;
   price_cents: number;
+  price_id: string;
   label: string;
   per_video: string;
 }
