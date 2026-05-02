@@ -95,4 +95,10 @@ def run_pipeline(self, job_id: str, product_url: str):
         _set_progress(r, job_id, 0, f"Failed: {e}", 0)
         if "run_dir" in dir():
             shutil.rmtree(run_dir, ignore_errors=True)
+        with SessionLocal() as db:
+            job = db.query(Job).filter(Job.id == job_id).first()
+            if job:
+                from api.database import User
+                db.query(User).filter(User.id == job.user_id).update({"credits": User.credits + 1})
+                db.commit()
         raise

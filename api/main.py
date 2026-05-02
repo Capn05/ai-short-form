@@ -5,6 +5,7 @@ from api.config import settings
 from api.database import init_db
 from api.routes.auth import router as auth_router
 from api.routes.jobs import router as jobs_router
+from api.routes.payments import router as payments_router
 
 app = FastAPI(title="AI Short Form API")
 
@@ -44,3 +45,4 @@ def health():
 
 app.include_router(auth_router)
 app.include_router(jobs_router)
+app.include_router(payments_router)

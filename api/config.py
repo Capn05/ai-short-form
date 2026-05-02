@@ -22,6 +22,9 @@ class Settings:
     AWS_S3_BUCKET: str = os.getenv("AWS_S3_BUCKET", "")
     AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
 
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
+    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
     GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/auth"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"

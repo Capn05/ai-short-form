@@ -35,6 +35,15 @@ def submit_job(body: SubmitRequest, db: Session = Depends(get_db), user: User = 
     if active >= 1:
         raise HTTPException(status_code=429, detail="You already have a job in progress. Wait for it to finish before submitting another.")
 
+    deducted = (
+        db.query(User)
+        .filter(User.id == user.id, User.credits >= 1)
+        .update({"credits": User.credits - 1}, synchronize_session=False)
+    )
+    db.commit()
+    if not deducted:
+        raise HTTPException(status_code=402, detail="No credits remaining. Purchase more to generate.")
+
     job_id = str(uuid.uuid4())
     job = Job(id=job_id, user_id=user.id, product_url=body.product_url)
     db.add(job)

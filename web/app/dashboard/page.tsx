@@ -1,15 +1,30 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { api, Job } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { api, Job, Pack } from "@/lib/api";
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<{ name: string; picture: string } | null>(null);
+  const searchParams = useSearchParams();
+  const [user, setUser] = useState<{ name: string; picture: string; credits: number } | null>(null);
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [packs, setPacks] = useState<Pack[]>([]);
+  const [buyingPack, setBuyingPack] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  const loadUser = useCallback(async () => {
+    try {
+      const u = await api.me();
+      setUser(u);
+    } catch {
+      localStorage.removeItem("token");
+      router.replace("/");
+    }
+  }, [router]);
 
   const loadJobs = useCallback(async () => {
     try {
@@ -22,24 +37,48 @@ export default function Dashboard() {
       router.replace("/");
       return;
     }
-    api.me().then(setUser).catch(() => {
-      localStorage.removeItem("token");
-      router.replace("/");
-    });
+    loadUser();
     loadJobs();
-  }, [router, loadJobs]);
+    api.getPacks().then(setPacks).catch(() => {});
+  }, [router, loadUser, loadJobs]);
+
+  useEffect(() => {
+    if (searchParams.get("payment") === "success") {
+      setPaymentSuccess(true);
+      const t = setTimeout(() => loadUser(), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams, loadUser]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (!url.trim()) return;
+    if (!user?.credits) {
+      setShowBuyModal(true);
+      return;
+    }
     setSubmitting(true);
     try {
       const { job_id } = await api.submitJob(url.trim());
       router.push(`/jobs/${job_id}`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof Error && err.message.includes("402")) {
+        setShowBuyModal(true);
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
       setSubmitting(false);
+    }
+  }
+
+  async function buyPack(packId: string) {
+    setBuyingPack(packId);
+    try {
+      const { checkout_url } = await api.createCheckout(packId);
+      window.location.href = checkout_url;
+    } catch {
+      setBuyingPack(null);
     }
   }
 
@@ -57,6 +96,12 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold">AI Short Form</h1>
           {user && (
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowBuyModal(true)}
+                className="text-sm font-medium bg-gray-900 text-white px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                {user.credits} credit{user.credits !== 1 ? "s" : ""} · Buy more
+              </button>
               {user.picture && (
                 <img src={user.picture} alt="" className="w-8 h-8 rounded-full" />
               )}
@@ -67,6 +112,13 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Payment success banner */}
+        {paymentSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-700 text-sm">
+            Payment successful! Your credits have been added.
+          </div>
+        )}
 
         {/* Form */}
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4">
@@ -89,7 +141,11 @@ export default function Dashboard() {
               disabled={submitting}
               className="w-full bg-gray-900 text-white font-medium py-3 rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {submitting ? "Submitting..." : "Generate video →"}
+              {submitting
+                ? "Submitting..."
+                : user?.credits
+                ? "Generate video →"
+                : "Buy credits to generate →"}
             </button>
           </form>
         </div>
@@ -117,6 +173,38 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Buy credits modal */}
+      {showBuyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Buy credits</h2>
+              <button onClick={() => setShowBuyModal(false)} className="text-gray-400 hover:text-gray-900 text-2xl leading-none">×</button>
+            </div>
+            <p className="text-gray-500 text-sm">Each credit = one video generation. Credits never expire.</p>
+            <div className="space-y-3">
+              {packs.map((pack) => (
+                <button
+                  key={pack.id}
+                  onClick={() => buyPack(pack.id)}
+                  disabled={buyingPack !== null}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-between"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-900">{pack.label}</p>
+                    <p className="text-sm text-gray-400">{pack.per_video}</p>
+                  </div>
+                  <p className="font-bold text-gray-900">
+                    ${(pack.price_cents / 100).toFixed(2)}
+                    {buyingPack === pack.id && <span className="ml-2 text-gray-400 font-normal text-sm">...</span>}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

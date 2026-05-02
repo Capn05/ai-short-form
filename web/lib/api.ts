@@ -22,7 +22,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   me: () =>
-    request<{ id: number; email: string; name: string; picture: string }>("/auth/me"),
+    request<{ id: number; email: string; name: string; picture: string; credits: number }>("/auth/me"),
 
   submitJob: (product_url: string) =>
     request<{ job_id: string }>("/jobs", {
@@ -45,6 +45,12 @@ export const api = {
     a.download = filename;
     a.click();
   },
+
+  getPacks: () =>
+    request<Pack[]>("/payments/packs"),
+
+  createCheckout: (packId: string) =>
+    request<{ checkout_url: string }>(`/payments/checkout/${packId}`, { method: "POST" }),
 };
 
 export interface Job {
@@ -60,4 +66,12 @@ export interface Progress {
   stage: number;
   message: string;
   percent: number;
+}
+
+export interface Pack {
+  id: string;
+  generations: number;
+  price_cents: number;
+  label: string;
+  per_video: string;
 }

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from api.config import settings
@@ -23,6 +23,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     picture = Column(String, nullable=True)
+    credits = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -38,8 +39,29 @@ class Job(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class Purchase(Base):
+    __tablename__ = "purchases"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    stripe_session_id = Column(String, unique=True, nullable=False)
+    stripe_payment_intent_id = Column(String, nullable=True)
+    generations = Column(Integer, nullable=False)
+    amount_cents = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
+    _run_migrations()
+
+
+def _run_migrations():
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS credits INTEGER NOT NULL DEFAULT 0"))
+            conn.commit()
+        except Exception:
+            conn.rollback()
 
 
 def get_db():
