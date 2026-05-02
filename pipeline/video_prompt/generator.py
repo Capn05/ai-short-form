@@ -268,7 +268,7 @@ Your job: take a voiceover script and product details, then output a complete se
 TARGET: {TARGET_VIDEO_DURATION}s total video, {TARGET_CHUNKS} chunks of up to {MAX_CHUNK_DURATION}s each.
 
 FORMAT RULES:
-- POV/b-roll only. No presenter to camera. Hands, side profile, and the subject are all fine — direct address never.
+- POV/b-roll only. No sustained presenter-to-camera monologue. Hands, side profile, and incidental face (holding product toward camera, glancing at camera, reacting) are all fine — extended direct address never.
 - Every shot must specify: subject, action, camera angle, movement, lighting, and setting.
 - Consistent lighting and setting across all chunks for seamless stitching.
 - Movement: "handheld shake" — not "slight handheld shake". Never smooth gimbal, cinematic push, camera pan, zoom, or any push toward or away from the subject. Seedance will add a zoom by default if movement is not asserted strongly — counter this by describing active subject motion instead (subject moving, hand reaching, head turning).
