@@ -1,9 +1,17 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, Job, Pack } from "@/lib/api";
 
 export default function Dashboard() {
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<{ name: string; picture: string; credits: number } | null>(null);
