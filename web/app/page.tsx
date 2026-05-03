@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const VIDEOS = [
+  "https://ai-short-form-output.s3.amazonaws.com/public/demo4.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo1.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo2.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo3.mp4",
-  "https://ai-short-form-output.s3.amazonaws.com/public/demo4.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo5.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo6.mp4",
   "https://ai-short-form-output.s3.amazonaws.com/public/demo7.mp4",
@@ -73,7 +73,7 @@ export default function Home() {
           UGC video ad in minutes.
         </h1>
         <p className="text-gray-500 text-lg max-w-xl">
-          AI-generated b-roll + voiceover + winning hooks — the AI format that actually performs on Meta and TikTok. No avatars, no choppy lip sync, no uncanny valley.<br></br><br></br> More formats coming soon.
+          AI-generated b-roll + voiceover + winning hooks — the AI format that actually performs on Meta and TikTok. No avatars, no choppy lip sync, no uncanny valley.
         </p>
         <div className="flex flex-col items-center gap-3">
           <a
@@ -90,7 +90,9 @@ export default function Home() {
       {/* Carousel */}
       <section className="pb-20 px-4">
         <p className="text-center text-gray-700 text-sm font-semibold uppercase tracking-widest mb-8">Example outputs</p>
+
         <VideoCarousel />
+        <p className="text-center text-gray-400 text-xs mt-6">More formats coming soon.</p>
       </section>
 
       {/* Powered by */}
@@ -369,10 +371,10 @@ function CardScrape() {
       <div className={`space-y-2 transition-opacity duration-500 ${showProduct ? "opacity-100" : "opacity-0"}`}>
         <p className="text-white text-sm font-medium truncate">Vitamin C Brightening Serum</p>
         <div className="flex items-center gap-2">
-          <span className="text-yellow-400 text-xs">★★★★★</span>
+          <span className="text-gray-300 text-xs">★★★★★</span>
           <span className="text-gray-400 text-xs">4.8 · 127 reviews</span>
         </div>
-        <span className="text-green-400 text-xs font-medium">$34.99</span>
+        <span className="text-gray-300 text-xs font-medium">$34.99</span>
       </div>
     </div>
   );
@@ -394,19 +396,19 @@ function CardPipeline() {
         <div
           key={stage}
           className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 transition-all duration-300 ${
-            i === active ? "bg-blue-500/20" : ""
+            i === active ? "bg-white/10" : ""
           }`}
         >
           <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
-            i === active ? "bg-blue-400 animate-pulse" :
-            i < active ? "bg-green-400" : "bg-gray-600"
+            i === active ? "bg-white animate-pulse" :
+            i < active ? "bg-gray-400" : "bg-gray-600"
           }`} />
           <span className={`text-xs transition-colors duration-300 ${
-            i === active ? "text-blue-300" :
+            i === active ? "text-white" :
             i < active ? "text-gray-400" : "text-gray-600"
           }`}>{stage}</span>
           {i < active && (
-            <svg className="w-3 h-3 text-green-400 ml-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-gray-400 ml-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
           )}
@@ -430,7 +432,7 @@ function CardDownload() {
       </div>
       <div className="bg-gray-700/60 rounded-lg px-3 py-2 flex items-center justify-between">
         <span className="text-gray-300 text-xs font-mono">your_ad.mp4</span>
-        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
         </svg>
       </div>
@@ -438,7 +440,7 @@ function CardDownload() {
         <div className="flex-1 bg-black rounded-lg py-1.5 flex items-center justify-center">
           <span className="text-white text-xs font-bold">TikTok</span>
         </div>
-        <div className="flex-1 bg-blue-600 rounded-lg py-1.5 flex items-center justify-center">
+        <div className="flex-1 bg-gray-700 rounded-lg py-1.5 flex items-center justify-center">
           <span className="text-white text-xs font-bold">Meta</span>
         </div>
       </div>
