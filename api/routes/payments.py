@@ -35,8 +35,8 @@ def create_checkout(pack_id: str, db: Session = Depends(get_db), user: User = De
             "user_id": str(user.id),
             "generations": str(pack["generations"]),
         },
-        success_url=f"{settings.FRONTEND_URL}/dashboard?payment=success",
-        cancel_url=f"{settings.FRONTEND_URL}/dashboard",
+        success_url=f"{settings.primary_frontend_url}/dashboard?payment=success",
+        cancel_url=f"{settings.primary_frontend_url}/dashboard",
     )
     return {"checkout_url": session.url}
 

@@ -31,6 +31,10 @@ class Settings:
     GOOGLE_SCOPE: str = "openid email profile"
 
     @property
+    def primary_frontend_url(self) -> str:
+        return self.FRONTEND_URL.split(",")[0].strip()
+
+    @property
     def google_redirect_uri(self) -> str:
         return f"{self.BACKEND_URL}/auth/google/callback"
 

@@ -63,7 +63,7 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
         db.refresh(user)
 
     token = create_token(user.id)
-    return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?token={token}")
+    return RedirectResponse(f"{settings.primary_frontend_url}/auth/callback?token={token}")
 
 
 @router.get("/me")
