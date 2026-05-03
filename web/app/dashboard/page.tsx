@@ -215,6 +215,12 @@ function DashboardContent() {
           </div>
         </div>
       )}
+      <footer className="text-center text-xs text-gray-400 pt-4">
+        Questions or feedback →{" "}
+        <a href="mailto:gxalvarado2013@gmail.com" className="hover:text-gray-700 transition-colors">
+          gxalvarado2013@gmail.com
+        </a>
+      </footer>
     </main>
   );
 }

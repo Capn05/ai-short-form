@@ -17,12 +17,11 @@ const VIDEOS = [
 export default function Home() {
   const router = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL;
-  const [loggedIn, setLoggedIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem("token")) setLoggedIn(true);
-  }, []);
+    if (localStorage.getItem("token")) router.replace("/dashboard");
+  }, [router]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -39,29 +38,20 @@ export default function Home() {
           : "bg-transparent"
       }`}>
         <Image src="/logo/logo-light.png" alt="Dropgen" width={scrolled ? 160 : 200} height={scrolled ? 42 : 54} priority style={{ transition: "width 0.3s, height 0.3s" }} />
-        {loggedIn ? (
-          <button
-            onClick={() => router.push("/dashboard")}
+        <div className="flex items-center gap-3">
+          <a
+            href={`${API}/auth/google`}
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >
-            Go to dashboard →
-          </button>
-        ) : (
-          <div className="flex items-center gap-3">
-            <a
-              href={`${API}/auth/google`}
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            >
-              Log in
-            </a>
-            <a
-              href={`${API}/auth/google`}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Get started
-            </a>
-          </div>
-        )}
+            Log in
+          </a>
+          <a
+            href={`${API}/auth/google`}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Get started
+          </a>
+        </div>
       </nav>
       <div className="h-16" />
 
