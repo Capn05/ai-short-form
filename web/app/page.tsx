@@ -18,16 +18,27 @@ export default function Home() {
   const router = useRouter();
   const API = process.env.NEXT_PUBLIC_API_URL;
   const [loggedIn, setLoggedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem("token")) setLoggedIn(true);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Nav */}
-      <nav className="flex justify-between items-center px-6 pt-6">
-        <Image src="/logo/logo-light.png" alt="Dropgen" width={240} height={64} priority />
+      <nav className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-3 transition-all duration-300 ${
+        scrolled
+          ? "bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm"
+          : "bg-transparent"
+      }`}>
+        <Image src="/logo/logo-light.png" alt="Dropgen" width={scrolled ? 160 : 200} height={scrolled ? 42 : 54} priority style={{ transition: "width 0.3s, height 0.3s" }} />
         {loggedIn ? (
           <button
             onClick={() => router.push("/dashboard")}
@@ -36,14 +47,23 @@ export default function Home() {
             Go to dashboard →
           </button>
         ) : (
-          <a
-            href={`${API}/auth/google`}
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Sign in
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href={`${API}/auth/google`}
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              Log in
+            </a>
+            <a
+              href={`${API}/auth/google`}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Get started
+            </a>
+          </div>
         )}
       </nav>
+      <div className="h-16" />
 
       {/* Hero */}
       <section className="flex flex-col items-center text-center px-4 pt-16 pb-12 space-y-6">
@@ -53,7 +73,7 @@ export default function Home() {
           UGC video ad in minutes.
         </h1>
         <p className="text-gray-500 text-lg max-w-xl">
-          AI-generated b-roll + voiceover — the format that actually performs on Meta and TikTok. No avatars, no lip sync, no uncanny valley. More formats coming soon.
+          AI-generated b-roll + voiceover + winning hooks — the AI format that actually performs on Meta and TikTok. No avatars, no choppy lip sync, no uncanny valley.<br></br><br></br> More formats coming soon.
         </p>
         <div className="flex flex-col items-center gap-3">
           <a
@@ -73,20 +93,58 @@ export default function Home() {
         <VideoCarousel />
       </section>
 
+      {/* Powered by */}
+      <section className="px-4 pb-12 text-center">
+        <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Powered by</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500 font-medium">
+          <span>ElevenLabs</span>
+          <span className="text-gray-300">·</span>
+          <span>Seedance 2</span>
+          <span className="text-gray-300">·</span>
+          <span>GPT-5.5</span>
+          <span className="text-gray-300">·</span>
+          <span>GPT Images 2.0</span>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section className="px-4 pb-20 max-w-2xl mx-auto space-y-6">
+      <section className="px-4 pb-20 max-w-5xl mx-auto space-y-8">
         <p className="text-center text-gray-700 text-sm font-semibold uppercase tracking-widest">How it works</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-          {[
-            { step: "1", label: "Paste your Shopify product URL" },
-            { step: "2", label: "Our AI picks a proven hook, writes the script, and generates footage that looks like real creator content — captions included." },
-            { step: "3", label: "Download your MP4 and run it on Meta or TikTok" },
-          ].map(({ step, label }) => (
-            <div key={step} className="space-y-2">
-              <div className="text-3xl font-bold text-gray-700">{step}</div>
-              <p className="text-gray-600 text-base">{label}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          {/* Step 1 */}
+          <div className="bg-gray-900 rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-5 flex-1">
+              <CardScrape />
             </div>
-          ))}
+            <div className="px-5 pb-5">
+              <p className="text-white font-semibold mb-1">Paste your Shopify URL</p>
+              <p className="text-gray-400 text-sm">Drop in your product page — we scrape everything we need.</p>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="bg-gray-900 rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-5 flex-1">
+              <CardPipeline />
+            </div>
+            <div className="px-5 pb-5">
+              <p className="text-white font-semibold mb-1">AI writes and films</p>
+              <p className="text-gray-400 text-sm">Picks a proven hook, writes the script, generates footage with captions.</p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="bg-gray-900 rounded-2xl overflow-hidden flex flex-col">
+            <div className="p-5 flex-1">
+              <CardDownload />
+            </div>
+            <div className="px-5 pb-5">
+              <p className="text-white font-semibold mb-1">Download and run</p>
+              <p className="text-gray-400 text-sm">Get your MP4 and launch it on TikTok or Meta.</p>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -102,6 +160,17 @@ export default function Home() {
           Sign in with Google
         </a>
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-100 px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-400">
+        <span>© {new Date().getFullYear()} Dropgen</span>
+        <a
+          href="mailto:gxalvarado2013@gmail.com"
+          className="hover:text-gray-700 transition-colors"
+        >
+          Questions, feedback, or refunds → gxalvarado2013@gmail.com
+        </a>
+      </footer>
     </main>
   );
 }
@@ -241,6 +310,137 @@ function VideoCarousel() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
+      </div>
+    </div>
+  );
+}
+
+const PIPELINE_STAGES = [
+  "Scraping product",
+  "Writing script",
+  "Planning shots",
+  "Generating voice",
+  "Generating video",
+  "Adding captions",
+];
+
+const URL_TEXT = "yourstore.myshopify.com/products/vitamin-c-serum";
+
+function CardScrape() {
+  const [displayed, setDisplayed] = useState("");
+  const [showProduct, setShowProduct] = useState(false);
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    let i = 0;
+
+    function loop() {
+      setDisplayed("");
+      setShowProduct(false);
+      i = 0;
+      function type() {
+        if (i <= URL_TEXT.length) {
+          setDisplayed(URL_TEXT.slice(0, i));
+          i++;
+          timeout = setTimeout(type, 38);
+        } else {
+          timeout = setTimeout(() => {
+            setShowProduct(true);
+            timeout = setTimeout(() => loop(), 2500);
+          }, 300);
+        }
+      }
+      type();
+    }
+    loop();
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <div className="bg-gray-800 rounded-xl p-4 space-y-3">
+      <div className="flex items-center gap-2 bg-gray-700/60 rounded-lg px-3 py-2.5">
+        <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101M14.828 14.828a4 4 0 015.656 0l4-4a4 4 0 01-5.656-5.656l-1.1 1.1"/>
+        </svg>
+        <span className="text-gray-300 text-xs font-mono truncate">
+          {displayed}<span className="opacity-70">|</span>
+        </span>
+      </div>
+      <div className={`space-y-2 transition-opacity duration-500 ${showProduct ? "opacity-100" : "opacity-0"}`}>
+        <p className="text-white text-sm font-medium truncate">Vitamin C Brightening Serum</p>
+        <div className="flex items-center gap-2">
+          <span className="text-yellow-400 text-xs">★★★★★</span>
+          <span className="text-gray-400 text-xs">4.8 · 127 reviews</span>
+        </div>
+        <span className="text-green-400 text-xs font-medium">$34.99</span>
+      </div>
+    </div>
+  );
+}
+
+function CardPipeline() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActive(s => (s + 1) % PIPELINE_STAGES.length);
+    }, 900);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bg-gray-800 rounded-xl p-4 space-y-1.5">
+      {PIPELINE_STAGES.map((stage, i) => (
+        <div
+          key={stage}
+          className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 transition-all duration-300 ${
+            i === active ? "bg-blue-500/20" : ""
+          }`}
+        >
+          <div className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
+            i === active ? "bg-blue-400 animate-pulse" :
+            i < active ? "bg-green-400" : "bg-gray-600"
+          }`} />
+          <span className={`text-xs transition-colors duration-300 ${
+            i === active ? "text-blue-300" :
+            i < active ? "text-gray-400" : "text-gray-600"
+          }`}>{stage}</span>
+          {i < active && (
+            <svg className="w-3 h-3 text-green-400 ml-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CardDownload() {
+  return (
+    <div className="bg-gray-800 rounded-xl p-4 space-y-3">
+      <div className="flex justify-center">
+        <div className="w-16 rounded-xl bg-gray-700 flex items-center justify-center" style={{ aspectRatio: "9/16", maxHeight: 112 }}>
+          <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+            <svg className="w-3.5 h-3.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div className="bg-gray-700/60 rounded-lg px-3 py-2 flex items-center justify-between">
+        <span className="text-gray-300 text-xs font-mono">your_ad.mp4</span>
+        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+      </div>
+      <div className="flex gap-2">
+        <div className="flex-1 bg-black rounded-lg py-1.5 flex items-center justify-center">
+          <span className="text-white text-xs font-bold">TikTok</span>
+        </div>
+        <div className="flex-1 bg-blue-600 rounded-lg py-1.5 flex items-center justify-center">
+          <span className="text-white text-xs font-bold">Meta</span>
+        </div>
       </div>
     </div>
   );
