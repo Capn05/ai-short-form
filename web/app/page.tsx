@@ -203,7 +203,7 @@ function VideoCarousel() {
                   loop
                   playsInline
                   preload="metadata"
-                  onLoadedMetadata={() => setLoadedVideos(prev => new Set([...prev, i]))}
+                  onLoadedMetadata={() => setLoadedVideos(prev => { const s = new Set(prev); s.add(i); return s; })}
                   style={{ opacity: loadedVideos.has(i) ? 1 : 0 }}
                 />
                 {absDist === 0 && !playing && (
