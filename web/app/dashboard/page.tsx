@@ -1,6 +1,7 @@
 "use client";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { api, Job, Pack } from "@/lib/api";
 
 export default function Dashboard() {
@@ -102,7 +103,7 @@ function DashboardContent() {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">AI Short Form</h1>
+          <Image src="/logo/logo-light.png" alt="Dropgen" width={120} height={32} />
           {user && (
             <div className="flex items-center gap-3">
               <button

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Short Form",
+  title: "Dropgen",
   description: "Turn any Shopify product URL into a UGC video ad in minutes.",
 };
 

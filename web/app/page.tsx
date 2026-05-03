@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const VIDEOS = [
   "https://ai-short-form-output.s3.amazonaws.com/public/demo1.mp4",
@@ -25,7 +26,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Nav */}
-      <nav className="flex justify-end px-6 pt-6">
+      <nav className="flex justify-between items-center px-6 pt-6">
+        <Image src="/logo/logo-light.png" alt="Dropgen" width={240} height={64} priority />
         {loggedIn ? (
           <button
             onClick={() => router.push("/dashboard")}
@@ -110,6 +112,7 @@ const CARD_GAP = -40;
 function VideoCarousel() {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [loadedVideos, setLoadedVideos] = useState<Set<number>>(new Set());
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const touchStartX = useRef<number | null>(null);
   const wheelAccum = useRef(0);
@@ -200,6 +203,8 @@ function VideoCarousel() {
                   loop
                   playsInline
                   preload="metadata"
+                  onLoadedMetadata={() => setLoadedVideos(prev => new Set([...prev, i]))}
+                  style={{ opacity: loadedVideos.has(i) ? 1 : 0 }}
                 />
                 {absDist === 0 && !playing && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20">
