@@ -231,7 +231,7 @@ function VideoCarousel() {
           {VIDEOS.map((_, i) => (
             <button
               key={i}
-              onClick={() => { videoRefs.current[current]?.pause(); setPlaying(false); setCurrent(i); }}
+              onClick={() => { videoRefs.current[current]?.pause(); setCurrent(i); }}
               className={`w-1.5 h-1.5 rounded-full transition-colors ${i === current ? "bg-gray-900" : "bg-gray-300"}`}
             />
           ))}
