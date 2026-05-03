@@ -111,8 +111,7 @@ const CARD_GAP = -40;
 
 function VideoCarousel() {
   const [current, setCurrent] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [loadedVideos, setLoadedVideos] = useState<Set<number>>(new Set());
+  const [muted, setMuted] = useState(true);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const touchStartX = useRef<number | null>(null);
   const wheelAccum = useRef(0);
@@ -120,16 +119,8 @@ function VideoCarousel() {
 
   const go = useCallback((dir: number) => {
     videoRefs.current[current]?.pause();
-    setPlaying(false);
     setCurrent((c) => (c + dir + VIDEOS.length) % VIDEOS.length);
   }, [current]);
-
-  function togglePlay() {
-    const v = videoRefs.current[current];
-    if (!v) return;
-    if (v.paused) { v.play(); setPlaying(true); }
-    else { v.pause(); setPlaying(false); }
-  }
 
   function onTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
@@ -155,9 +146,12 @@ function VideoCarousel() {
   }
 
   useEffect(() => {
-    videoRefs.current.forEach((v, i) => { if (v && i !== current) v.pause(); });
-    setPlaying(false);
-  }, [current]);
+    videoRefs.current.forEach((v, i) => {
+      if (!v) return;
+      if (i === current) { v.muted = muted; v.play().catch(() => {}); }
+      else v.pause();
+    });
+  }, [current, muted]);
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -183,8 +177,8 @@ function VideoCarousel() {
               <div
                 key={i}
                 onClick={() => {
-                  if (absDist === 0) togglePlay();
-                  else { videoRefs.current[current]?.pause(); setPlaying(false); setCurrent(i); }
+                  if (absDist === 0) setMuted(m => !m);
+                  else { videoRefs.current[current]?.pause(); setCurrent(i); }
                 }}
                 className="absolute rounded-2xl overflow-hidden bg-gray-200 cursor-pointer"
                 style={{
@@ -201,17 +195,22 @@ function VideoCarousel() {
                   src={src}
                   className="w-full h-full object-cover"
                   loop
+                  muted
                   playsInline
                   preload="metadata"
-                  onLoadedMetadata={() => setLoadedVideos(prev => { const s = new Set(prev); s.add(i); return s; })}
-                  style={{ opacity: loadedVideos.has(i) ? 1 : 0 }}
                 />
-                {absDist === 0 && !playing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <div className="w-12 h-12 rounded-full bg-white/30 backdrop-blur flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                {absDist === 0 && (
+                  <div className="absolute bottom-3 right-3">
+                    <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur flex items-center justify-center">
+                      {muted ? (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0017.73 18L19 19.27 20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                      )}
                     </div>
                   </div>
                 )}
